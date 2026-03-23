@@ -2,12 +2,12 @@
 
 ## Phase 0: Project Setup
 
-* [ ] Git repo initialized
-* [ ] GitHub repo created + pushed
-* [ ] Python 3.12 venv created
-* [ ] pyproject.toml created
-* [ ] Dependencies installed
-* [ ] README.md created
+* [x] Git repo initialized
+* [x] GitHub repo created + pushed
+* [x] Python 3.12 venv created
+* [x] pyproject.toml created
+* [x] Dependencies installed
+* [x] README.md created
 
 ## Phase 1: Ingestion
 

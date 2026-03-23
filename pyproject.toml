@@ -48,7 +48,7 @@ airflow = [
 ]
 
 [project.urls]
-repository = "https://github.com/waleed/citybikes-pipeline"
+repository = "https://github.com/WaleedHashmi2310/citybikes-pipeline"
 
 [tool.setuptools.packages.find]
 where = ["."]
