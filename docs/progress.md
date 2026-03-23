@@ -11,11 +11,11 @@
 
 ## Phase 1: Ingestion
 
-* [ ] API client implemented
-* [ ] Pydantic schema defined
-* [ ] Data extraction working
-* [ ] Retry logic implemented
-* [ ] Unit tests passing
+* [x] API client implemented
+* [x] Pydantic schema defined
+* [x] Data extraction working
+* [x] Retry logic implemented
+* [x] Unit tests passing
 
 ## Phase 2: Storage
 
