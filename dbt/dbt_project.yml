@@ -1,27 +1,37 @@
-# dbt_project.yml
-
-name: 'citybikes'
-version: '1.0.0'
+name: citybikes
+version: "1.0.0"
 config-version: 2
 
-profile: 'citybikes'
+profile: citybikes
 
 vars:
-  raw_data_path: "../data/raw"
+  raw_data_path: ../data/raw
 
-model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["data"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
+model-paths:
+  - models
+
+analysis-paths:
+  - analyses
+
+test-paths:
+  - tests
+
+seed-paths:
+  - data
+
+macro-paths:
+  - macros
+
+snapshot-paths:
+  - snapshots
 
 # directory for compiled files
-target-path: "target"
+target-path: target
+
 # directories to be removed by `dbt clean`
 clean-targets:
-  - "target"
-  - "dbt_packages"
+  - target
+  - dbt_packages
 
 models:
   citybikes:
@@ -38,5 +48,5 @@ models:
         relation: false
         columns: false
 
-# Require tests
+# Require dbt version
 require-dbt-version: ">=1.7.0"
