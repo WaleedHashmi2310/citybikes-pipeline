@@ -19,10 +19,10 @@
 
 ## Phase 2: Storage
 
-* [ ] Local storage (Parquet)
-* [ ] GCS storage
-* [ ] Interface abstraction
-* [ ] Tests passing
+* [x] Local storage (Parquet)
+* [x] GCS storage
+* [x] Interface abstraction
+* [x] Tests passing
 
 ## Phase 3: dbt
 

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class Location(BaseModel):
     """Location schema for network."""
+
     city: str
     country: str
     latitude: float
@@ -15,6 +16,7 @@ class Location(BaseModel):
 
 class NetworkSummary(BaseModel):
     """Network summary from /v2/networks endpoint."""
+
     id: str
     name: str
     href: str
@@ -26,11 +28,13 @@ class NetworkSummary(BaseModel):
 
 class NetworkListResponse(BaseModel):
     """Response from /v2/networks endpoint."""
+
     networks: List[NetworkSummary]
 
 
 class StationExtra(BaseModel):
     """Extra fields for station."""
+
     uid: Optional[str] = None
     renting: Optional[Union[int, str]] = None
     returning: Optional[Union[int, str]] = None
@@ -44,11 +48,13 @@ class StationExtra(BaseModel):
 
     class Config:
         """Pydantic config."""
+
         populate_by_name = True
 
 
 class Station(BaseModel):
     """Station schema from network details endpoint."""
+
     id: str
     name: str
     latitude: float
@@ -61,6 +67,7 @@ class Station(BaseModel):
 
 class Vehicle(BaseModel):
     """Vehicle schema (for roaming vehicles)."""
+
     id: str
     latitude: float
     longitude: float
@@ -71,6 +78,7 @@ class Vehicle(BaseModel):
 
 class NetworkDetails(BaseModel):
     """Network details from /v2/networks/{network_id} endpoint."""
+
     id: str
     name: str
     href: str
@@ -84,6 +92,7 @@ class NetworkDetails(BaseModel):
 
 class NormalizedStation(BaseModel):
     """Normalized station record for storage."""
+
     station_id: str = Field(alias="id")
     name: str
     latitude: float
@@ -96,5 +105,6 @@ class NormalizedStation(BaseModel):
 
     class Config:
         """Pydantic config."""
+
         populate_by_name = True  # Allow both alias and field name
         extra = "ignore"  # Ignore extra fields

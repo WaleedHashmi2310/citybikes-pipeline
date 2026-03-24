@@ -29,10 +29,12 @@ class CityBikesClient:
         """
         self.base_url = base_url or self.BASE_URL
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "citybikes-pipeline/0.1.0",
-            "Accept": "application/json",
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": "citybikes-pipeline/0.1.0",
+                "Accept": "application/json",
+            }
+        )
 
     @retry(
         stop=stop_after_attempt(3),

@@ -14,14 +14,14 @@ class CityBikesExtractor:
 
     # Primary network IDs for target German cities
     GERMAN_NETWORK_IDS = [
-        "callabike-frankfurt",      # Frankfurt
-        "callabike-koln",           # Cologne (Köln)
-        "nextbike-dusseldorf",      # Dusseldorf (Düsseldorf)
-        "stadtrad-hamburg-db",      # Hamburg
-        "callabike-munchen",        # Munich (München)
-        "stadtrad-stuttgart",       # Stuttgart
-        "mobibike-dresden",         # Dresden
-        "nextbike-leipzig",         # Leipzig
+        "callabike-frankfurt",  # Frankfurt
+        "callabike-koln",  # Cologne (Köln)
+        "nextbike-dusseldorf",  # Dusseldorf (Düsseldorf)
+        "stadtrad-hamburg-db",  # Hamburg
+        "callabike-munchen",  # Munich (München)
+        "stadtrad-stuttgart",  # Stuttgart
+        "mobibike-dresden",  # Dresden
+        "nextbike-leipzig",  # Leipzig
         "mvg-meinrad-nextbike-mainz",  # Mainz
     ]
 
