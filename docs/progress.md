@@ -26,11 +26,11 @@
 
 ## Phase 3: dbt
 
-* [ ] DuckDB profile
-* [ ] BigQuery profile
-* [ ] Staging models
-* [ ] Mart models
-* [ ] Tests
+* [x] DuckDB profile
+* [x] BigQuery profile
+* [x] Staging models
+* [x] Mart models
+* [x] Tests
 
 ## Phase 4: Airflow
 
