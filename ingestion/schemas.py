@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Optional, List, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class Location(BaseModel):
@@ -61,8 +61,16 @@ class Station(BaseModel):
     longitude: float
     timestamp: str  # UTC timestamp string
     free_bikes: int
-    empty_slots: int
+    empty_slots: Optional[int] = 0
     extra: Optional[StationExtra] = None
+
+    @field_validator('empty_slots', mode='before')
+    @classmethod
+    def convert_none_to_zero(cls, v):
+        """Convert None to 0 for empty_slots."""
+        if v is None:
+            return 0
+        return v
 
 
 class Vehicle(BaseModel):

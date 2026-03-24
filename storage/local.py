@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
+import itertools
 import pandas as pd
 from ingestion.schemas import NormalizedStation
 from storage.interface import StorageInterface, StorageError
@@ -42,34 +43,43 @@ class LocalStorage(StorageInterface):
             return str(self.base_path)
 
         try:
-            # Convert to pandas DataFrame
-            df = self._stations_to_dataframe(stations)
-
             # Determine batch timestamp for file naming (use first station's ingestion time)
             batch_timestamp = stations[0].ingestion_timestamp
             batch_date = batch_timestamp.date()
 
-            # Generate filename with timestamp
-            filename = f"stations_{batch_timestamp.strftime('%Y%m%d_%H%M%S')}.parquet"
+            # Sort stations by city for grouping
+            stations_sorted = sorted(stations, key=lambda s: s.city)
 
-            # Full path with partitioning
-            full_path = (
-                self.base_path / f"date={batch_date}" / f"city={stations[0].city}"
-            )
+            # Group stations by city
+            for city, city_stations in itertools.groupby(stations_sorted, key=lambda s: s.city):
+                city_stations_list = list(city_stations)
 
-            # Ensure directory exists
-            full_path.mkdir(parents=True, exist_ok=True)
-            file_path = full_path / filename
+                # Convert to pandas DataFrame for this city
+                df = self._stations_to_dataframe(city_stations_list)
 
-            # Write Parquet file with partitioning
-            logger.info(
-                f"Writing {len(stations)} stations to {file_path} "
-                f"(partitioned by date={batch_date}, city={stations[0].city})"
-            )
-            df.to_parquet(file_path, index=False)
+                # Generate filename with timestamp and city (for uniqueness)
+                filename = f"stations_{batch_timestamp.strftime('%Y%m%d_%H%M%S')}_{city}.parquet"
 
-            logger.debug(f"Successfully wrote Parquet file: {file_path}")
-            return str(file_path.absolute())
+                # Full path with partitioning
+                full_path = (
+                    self.base_path / f"date={batch_date}" / f"city={city}"
+                )
+
+                # Ensure directory exists
+                full_path.mkdir(parents=True, exist_ok=True)
+                file_path = full_path / filename
+
+                # Write Parquet file with partitioning
+                logger.info(
+                    f"Writing {len(city_stations_list)} stations to {file_path} "
+                    f"(partitioned by date={batch_date}, city={city})"
+                )
+                df.to_parquet(file_path, index=False)
+
+                logger.debug(f"Successfully wrote Parquet file: {file_path}")
+
+            logger.info(f"Stored stations for {len(list(itertools.groupby(stations_sorted, key=lambda s: s.city)))} cities")
+            return str(self.base_path.absolute())
 
         except Exception as e:
             logger.error(f"Failed to store stations locally: {e}")
@@ -86,14 +96,13 @@ class LocalStorage(StorageInterface):
             station_dict = station.model_dump(by_alias=True)
             # Ensure station_id field is present (alias for 'id')
             station_dict["station_id"] = station_dict.pop("id", station.station_id)
+            # Add partition columns per station
+            station_dict["city"] = station.city
+            station_dict["date"] = station.ingestion_timestamp.date().isoformat()
             station_dicts.append(station_dict)
 
         df = pd.DataFrame(station_dicts)
 
-        # Add partition columns (extract from first station for consistency)
-        first_station = stations[0]
-        df["date"] = first_station.ingestion_timestamp.date().isoformat()
-        df["city"] = first_station.city
 
         # Ensure consistent column order
         columns = [

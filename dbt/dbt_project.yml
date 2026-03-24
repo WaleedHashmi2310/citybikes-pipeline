@@ -16,8 +16,10 @@ seed-paths: ["data"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-target-path: "target"  # directory for compiled files
-clean-targets:         # directories to be removed by `dbt clean`
+# directory for compiled files
+target-path: "target"
+# directories to be removed by `dbt clean`
+clean-targets:
   - "target"
   - "dbt_packages"
 

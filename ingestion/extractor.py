@@ -65,7 +65,7 @@ class CityBikesExtractor:
                     longitude=station.longitude,
                     free_bikes=station.free_bikes,
                     empty_slots=station.empty_slots,
-                    timestamp=station.timestamp,
+                    timestamp=self._clean_timestamp(station.timestamp),
                     ingestion_timestamp=ingestion_timestamp,
                     city=city,
                 )
@@ -81,6 +81,16 @@ class CityBikesExtractor:
             f"Extracted {len(normalized_stations)} stations from {network_id} ({city})"
         )
         return normalized_stations
+
+    def _clean_timestamp(self, timestamp: str) -> str:
+        """Clean timestamp string for DuckDB compatibility.
+
+        Removes redundant 'Z' suffix when timezone offset already present.
+        Example: '2026-03-24T09:23:54.828179+00:00Z' -> '2026-03-24T09:23:54.828179+00:00'
+        """
+        if timestamp.endswith('Z') and '+' in timestamp:
+            return timestamp[:-1]
+        return timestamp
 
     def extract_all_stations(self) -> List[NormalizedStation]:
         """
