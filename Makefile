@@ -78,18 +78,18 @@ generate-sample-data:  ## Generate sample Parquet data for testing
 	$(PYTHON) scripts/generate_sample_data.py
 
 dbt-run:  ## Run dbt models (requires installed dbt dependencies)
-	cd $(DBT_PROJECT_DIR) && dbt run --profiles-dir $(DBT_PROFILES_DIR)
+	dbt run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
 dbt-test:  ## Run dbt data tests
-	cd $(DBT_PROJECT_DIR) && dbt test --profiles-dir $(DBT_PROFILES_DIR)
+	dbt test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
 pipeline: ingest-local dbt-run dbt-test  ## Run local pipeline: ingestion -> dbt -> data tests
 
 dbt-docs:  ## Generate dbt documentation
-	cd $(DBT_PROJECT_DIR) && dbt docs generate --profiles-dir $(DBT_PROFILES_DIR)
+	dbt docs generate --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
 dbt-clean:  ## Clean dbt artifacts
-	cd $(DBT_PROJECT_DIR) && dbt clean --profiles-dir $(DBT_PROFILES_DIR)
+	dbt clean --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
 all: install-all test dbt-run dbt-test  ## Run full pipeline: install, test, transform, test data
 

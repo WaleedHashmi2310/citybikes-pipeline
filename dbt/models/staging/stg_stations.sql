@@ -20,7 +20,7 @@ with raw_data as (
         ingestion_timestamp,
         city,
         date
-    from read_parquet('{{ var("raw_data_path", "../../data/raw") }}/**/*.parquet')
+    from read_parquet('{{ var("raw_data_path", "data/raw") }}/**/*.parquet')
 )
 
 select

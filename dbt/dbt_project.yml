@@ -5,7 +5,7 @@ config-version: 2
 profile: citybikes
 
 vars:
-  raw_data_path: ../data/raw
+  raw_data_path: data/raw
 
 model-paths:
   - models
