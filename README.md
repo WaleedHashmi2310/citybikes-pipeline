@@ -34,6 +34,20 @@ See [docs/structure.md](docs/structure.md) for details.
 3. Activate virtual environment: `source .venv/bin/activate`
 4. Install dependencies: `pip install -e .`
 
+### Environment Variables
+
+1. Copy the environment template: `cp .env.example .env`
+2. Edit `.env` with your configuration:
+   - For local development with DuckDB: Set `DBT_DUCKDB_PATH` (default: `citybikes.duckdb`)
+   - For cloud deployment with BigQuery/GCS: Set all BigQuery and Google Cloud variables
+3. Load environment variables into your shell:
+   ```bash
+   export $(grep -v '^#' .env | xargs)
+   ```
+   Or use a tool like `direnv` or `dotenv`.
+
+See [.env.example](.env.example) for detailed variable descriptions.
+
 ### Development
 
 Follow the phased implementation approach outlined in [CLAUDE.md](CLAUDE.md).
