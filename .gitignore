@@ -139,9 +139,7 @@ dmypy.json
 Thumbs.db
 
 # Data
-data/*
-data/raw/*.parquet
-data/raw/*.csv
+data/raw/**
 !data/raw/
 !data/raw/.gitkeep
 
