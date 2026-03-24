@@ -96,6 +96,28 @@ python scripts/run_ingestion.py --storage gcs --bucket your-bucket-name
 python scripts/run_ingestion.py --help
 ```
 
+### Orchestration with Airflow (Docker)
+
+The pipeline is orchestrated using Apache Airflow running in Docker:
+
+```bash
+# Build and start Airflow with Docker
+make docker-airflow
+
+# View logs
+make docker-logs
+
+# Stop services
+make docker-down
+```
+
+Access Airflow UI at http://localhost:8080 (admin/admin). The DAG `citybikes_pipeline` runs daily and executes:
+1. Data ingestion from CityBikes API
+2. dbt transformations
+3. Data quality tests
+
+See [docs/RUNNING_AIRFLOW.md](docs/RUNNING_AIRFLOW.md) for detailed instructions.
+
 ### Development
 
 Follow the phased implementation approach outlined in [CLAUDE.md](CLAUDE.md).

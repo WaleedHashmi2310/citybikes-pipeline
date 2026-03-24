@@ -155,6 +155,7 @@ logs/
 airflow/logs/
 airflow/plugins/__pycache__/
 
+airflow_home/
 # Terraform
 *.tfstate
 *.tfstate.*

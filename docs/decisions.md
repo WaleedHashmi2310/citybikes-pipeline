@@ -19,11 +19,13 @@
 * Native integration with GCS
 * Works with Looker
 
-## Airflow (Astro)
+## Airflow (Docker)
 
 * Industry standard orchestration
 * DAG-based control
-* Easy Docker integration
+* Docker Compose for local development and production-like environment
+* PostgreSQL backend for metadata storage
+* Custom image with project dependencies baked in
 
 ## Append-Only Strategy
 

@@ -34,9 +34,9 @@
 
 ## Phase 4: Airflow
 
-* [ ] DAG created
-* [ ] Tasks connected
-* [ ] Local run successful
+* [x] DAG created
+* [x] Tasks connected
+* [x] Local run successful
 
 ## Phase 5: Cloud
 

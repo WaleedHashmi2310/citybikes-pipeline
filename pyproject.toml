@@ -10,14 +10,14 @@ readme = "README.md"
 authors = [
     {name = "Waleed", email = "user@example.com"},
 ]
-license = "MIT"
+license = {text = "MIT"}
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "requests>=2.31.0",
     "pydantic>=2.5.0",
