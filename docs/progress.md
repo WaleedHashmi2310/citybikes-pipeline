@@ -37,6 +37,9 @@
 * [x] DAG created
 * [x] Tasks connected
 * [x] Local run successful
+* [x] Docker orchestration setup
+* [x] Makefile automation
+* [x] Airflow UI accessible
 
 ## Phase 5: Cloud
 
