@@ -1,0 +1,40 @@
+# dbt_project.yml
+
+name: 'citybikes'
+version: '1.0.0'
+config-version: 2
+
+profile: 'citybikes'
+
+vars:
+  raw_data_path: "../data/raw"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["data"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  # directory for compiled files
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+models:
+  citybikes:
+    staging:
+      +materialized: view
+      +schema: staging
+      +persist_docs:
+        relation: false
+        columns: false
+    marts:
+      +materialized: table
+      +schema: marts
+      +persist_docs:
+        relation: false
+        columns: false
+
+# Require tests
+require-dbt-version: ">=1.7.0"

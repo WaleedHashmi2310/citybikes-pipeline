@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_stations
+    description: "Cleaned station data from raw Parquet files"
+    columns:
+      - name: station_id
+        description: "Unique identifier for the station"
+        tests:
+          - not_null
+      - name: name
+        description: "Station name"
+      - name: latitude
+        description: "Geographic latitude"
+        tests:
+          - not_null
+      - name: longitude
+        description: "Geographic longitude"
+        tests:
+          - not_null
+      - name: free_bikes
+        description: "Number of available bikes"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+      - name: empty_slots
+        description: "Number of empty slots"
+        tests:
+          - not_null
+      - name: station_timestamp
+        description: "Original timestamp from API (UTC)"
+        tests:
+          - not_null
+      - name: ingestion_timestamp
+        description: "When the data was ingested (UTC)"
+        tests:
+          - not_null
+      - name: city
+        description: "City name"
+        tests:
+          - not_null
+      - name: date
+        description: "Partition date (from ingestion_timestamp)"
+        tests:
+          - not_null

@@ -1,0 +1,22 @@
+# profiles.yml
+
+citybikes:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'citybikes.duckdb') }}"
+      schema: main
+      threads: 1
+
+    prod:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'citybikes') }}"
+      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE') }}"
+      location: "{{ env_var('DBT_BIGQUERY_LOCATION', 'EU') }}"
+      threads: 4
+      timeout_seconds: 300
+      priority: interactive
+      retries: 1
