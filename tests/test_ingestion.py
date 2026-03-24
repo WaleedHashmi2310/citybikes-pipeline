@@ -240,14 +240,18 @@ class TestCityBikesExtractor:
         extractor = CityBikesExtractor()
         ids = extractor.GERMAN_NETWORK_IDS
 
-        assert len(ids) == 9
+        assert len(ids) == 12
         assert "callabike-frankfurt" in ids
+        assert "visa-frankfurt" in ids  # Frankfurt alternative, high volume
+        assert "callabike-koln" in ids
+        assert "kvb-rad-koln" in ids  # Cologne alternative, high volume
         assert "nextbike-dusseldorf" in ids
         assert "stadtrad-hamburg-db" in ids
         assert "callabike-munchen" in ids
         assert "stadtrad-stuttgart" in ids
         assert "mobibike-dresden" in ids
         assert "nextbike-leipzig" in ids
+        assert "callabike-berlin" in ids  # Berlin, high volume
         assert "mvg-meinrad-nextbike-mainz" in ids
 
     @patch.object(CityBikesClient, "get_network_details")

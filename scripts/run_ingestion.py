@@ -34,17 +34,21 @@ from storage.local import LocalStorage
 from storage.gcs import GCSStorage
 from storage.interface import StorageInterface  # noqa: F401
 
-# Default network IDs (German cities from extractor)
+# Default network IDs (German cities from extractor - high volume networks)
 DEFAULT_NETWORKS = [
     "callabike-frankfurt",
+    "visa-frankfurt",
     "callabike-koln",
+    "kvb-rad-koln",
     "nextbike-dusseldorf",
     "stadtrad-hamburg-db",
     "callabike-munchen",
     "stadtrad-stuttgart",
     "mobibike-dresden",
     "nextbike-leipzig",
+    "callabike-berlin",
     "mvg-meinrad-nextbike-mainz",
+    # Koblenz not available in CityBikes API
 ]
 
 def setup_logging(verbose: bool = False):

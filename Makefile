@@ -12,7 +12,7 @@ PROJECT_NAME = citybikes-pipeline
 DBT_PROFILES_DIR = dbt/profiles
 DBT_PROJECT_DIR = dbt
 RAW_DATA_PATH = data/raw
-NETWORKS ?= callabike-frankfurt,callabike-koln,nextbike-dusseldorf,stadtrad-hamburg-db,callabike-munchen,stadtrad-stuttgart,mobibike-dresden,nextbike-leipzig,mvg-meinrad-nextbike-mainz
+NETWORKS ?= callabike-frankfurt,visa-frankfurt,callabike-koln,kvb-rad-koln,nextbike-dusseldorf,stadtrad-hamburg-db,callabike-munchen,stadtrad-stuttgart,mobibike-dresden,nextbike-leipzig,callabike-berlin,mvg-meinrad-nextbike-mainz
 
 # Determine OS for activate script
 ifeq ($(OS),Windows_NT)

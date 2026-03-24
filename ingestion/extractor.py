@@ -12,17 +12,21 @@ logger = logging.getLogger(__name__)
 class CityBikesExtractor:
     """Extract and normalize station data from CityBikes API."""
 
-    # Primary network IDs for target German cities
+    # Primary network IDs for target German cities (high volume networks)
     GERMAN_NETWORK_IDS = [
         "callabike-frankfurt",  # Frankfurt
+        "visa-frankfurt",  # Frankfurt (alternative, high volume)
         "callabike-koln",  # Cologne (Köln)
+        "kvb-rad-koln",  # Cologne (alternative, high volume)
         "nextbike-dusseldorf",  # Dusseldorf (Düsseldorf)
         "stadtrad-hamburg-db",  # Hamburg
         "callabike-munchen",  # Munich (München)
         "stadtrad-stuttgart",  # Stuttgart
         "mobibike-dresden",  # Dresden
         "nextbike-leipzig",  # Leipzig
+        "callabike-berlin",  # Berlin (added for high volume)
         "mvg-meinrad-nextbike-mainz",  # Mainz
+        # Koblenz not available in CityBikes API
     ]
 
     def __init__(self, client: Optional[CityBikesClient] = None):
