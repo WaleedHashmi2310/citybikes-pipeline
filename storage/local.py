@@ -33,7 +33,7 @@ class LocalStorage(StorageInterface):
             stations: List of normalized station records
 
         Returns:
-            Absolute path to stored data directory
+            Absolute path to stored Parquet file (first city's file)
 
         Raises:
             StorageError: If storage operation fails
@@ -51,7 +51,11 @@ class LocalStorage(StorageInterface):
             stations_sorted = sorted(stations, key=lambda s: s.city)
 
             # Group stations by city
+            first_file_path = None
+            city_count = 0
+
             for city, city_stations in itertools.groupby(stations_sorted, key=lambda s: s.city):
+                city_count += 1
                 city_stations_list = list(city_stations)
 
                 # Convert to pandas DataFrame for this city
@@ -78,8 +82,13 @@ class LocalStorage(StorageInterface):
 
                 logger.debug(f"Successfully wrote Parquet file: {file_path}")
 
-            logger.info(f"Stored stations for {len(list(itertools.groupby(stations_sorted, key=lambda s: s.city)))} cities")
-            return str(self.base_path.absolute())
+                # Capture first file path to return
+                if first_file_path is None:
+                    first_file_path = file_path
+
+            logger.info(f"Stored stations for {city_count} cities")
+            # Return path to first city's file (for compatibility with tests and GCSStorage)
+            return str(first_file_path.absolute())
 
         except Exception as e:
             logger.error(f"Failed to store stations locally: {e}")

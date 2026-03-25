@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Optional, List, Union
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class Location(BaseModel):
@@ -46,10 +46,7 @@ class StationExtra(BaseModel):
     slots: Optional[Union[int, str]] = None
     rental_uris: Optional[dict] = None
 
-    class Config:
-        """Pydantic config."""
-
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Station(BaseModel):
@@ -111,8 +108,4 @@ class NormalizedStation(BaseModel):
     ingestion_timestamp: datetime  # When we ingested the data
     city: str  # City name from network location
 
-    class Config:
-        """Pydantic config."""
-
-        populate_by_name = True  # Allow both alias and field name
-        extra = "ignore"  # Ignore extra fields
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
