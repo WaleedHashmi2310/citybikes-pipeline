@@ -6,6 +6,7 @@ profile: citybikes
 
 vars:
   raw_data_path: data/raw
+  gcs_bucket_name: citybikes-elt-de-bucket
 
 model-paths:
   - models

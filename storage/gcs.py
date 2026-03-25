@@ -161,8 +161,8 @@ class GCSStorage(StorageInterface):
             city = stations[0].city
             filename = local_path.name
 
-            # GCS path: raw/date=YYYY-MM-DD/city=CityName/filename
-            gcs_path = f"raw/date={batch_date}/city={city}/{filename}"
+            # GCS path: raw/city=CityName/date=YYYY-MM-DD/filename
+            gcs_path = f"raw/city={city}/date={batch_date}/{filename}"
 
             # Upload to GCS with retry logic
             logger.info(

@@ -1,4 +1,10 @@
-FROM apache/airflow:2.7.3-python3.11
+# For GCP deployment, use standard Airflow image
+# For local development, can use apache/airflow (see docker-compose.yml)
+ARG BASE_IMAGE=apache/airflow:2.7.3-python3.11
+FROM ${BASE_IMAGE}
+
+# Username for the runtime user (airflow for apache/airflow)
+ARG USERNAME=airflow
 
 # Switch to root to install system dependencies
 USER root
@@ -11,17 +17,17 @@ RUN apt-get update && \
         curl \
         && rm -rf /var/lib/apt/lists/*
 
-# Switch back to airflow user
-USER airflow
+# Switch back to runtime user (airflow for apache/airflow)
+USER ${USERNAME}
 
 # Copy project files
-COPY --chown=airflow:airflow pyproject.toml /opt/airflow/project/
-COPY --chown=airflow:airflow ingestion/ /opt/airflow/project/ingestion/
-COPY --chown=airflow:airflow storage/ /opt/airflow/project/storage/
-COPY --chown=airflow:airflow scripts/ /opt/airflow/project/scripts/
-COPY --chown=airflow:airflow tests/ /opt/airflow/project/tests/
-COPY --chown=airflow:airflow dbt/ /opt/airflow/project/dbt/
-COPY --chown=airflow:airflow Makefile /opt/airflow/project/
+COPY --chown=${USERNAME}:${USERNAME} pyproject.toml /opt/airflow/project/
+COPY --chown=${USERNAME}:${USERNAME} ingestion/ /opt/airflow/project/ingestion/
+COPY --chown=${USERNAME}:${USERNAME} storage/ /opt/airflow/project/storage/
+COPY --chown=${USERNAME}:${USERNAME} scripts/ /opt/airflow/project/scripts/
+COPY --chown=${USERNAME}:${USERNAME} tests/ /opt/airflow/project/tests/
+COPY --chown=${USERNAME}:${USERNAME} dbt/ /opt/airflow/project/dbt/
+COPY --chown=${USERNAME}:${USERNAME} Makefile /opt/airflow/project/
 
 # Install Python dependencies (install without editable mode to avoid pyproject.toml issues)
 WORKDIR /opt/airflow/project

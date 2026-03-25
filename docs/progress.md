@@ -43,10 +43,13 @@
 
 ## Phase 5: Cloud
 
-* [ ] Terraform infra
-* [ ] GCS bucket
-* [ ] BigQuery dataset
-* [ ] IAM roles
+* [x] Terraform infra
+* [x] GCS bucket
+* [x] BigQuery dataset
+* [x] IAM roles
+* [x] Cloud ingestion test (Frankfurt stations → GCS)
+* [x] dbt transformations on BigQuery (europe-west1)
+* [x] Data tests (9/10 passing, 1 type mismatch accepted_values)
 
 ## Phase 6: CI/CD
 

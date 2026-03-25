@@ -133,6 +133,7 @@ dmypy.json
 .idea/
 *.swp
 *.swo
+.astro/
 
 # OS
 .DS_Store

@@ -78,6 +78,24 @@ make dbt-test              # Run data quality tests
 make test                  # Run unit tests
 ```
 
+### Simplified Workflow
+
+For streamlined deployment, use these high-level targets:
+
+```bash
+# Local development: Set up environment and start Airflow with Docker
+make local
+
+# Cloud deployment: Provision GCP resources and start Airflow VM
+make cloud
+
+# Run pipeline directly in cloud mode (after cloud setup)
+make cloud-pipeline
+
+# Destroy all GCP resources
+make cloud-destroy
+```
+
 ### Manual Usage
 
 You can also run the ingestion script directly:
@@ -117,6 +135,104 @@ Access Airflow UI at http://localhost:8080 (admin/admin). The DAG `citybikes_pip
 3. Data quality tests
 
 See [docs/RUNNING_AIRFLOW.md](docs/RUNNING_AIRFLOW.md) for detailed instructions.
+
+### Cloud Orchestration on GCP
+
+For production deployment on Google Cloud Platform, several cost-effective options are available. For the simplest deployment experience, use `make cloud` which automates Option 1 (Compute Engine VM):
+
+#### Option 1: Compute Engine VM (Cheapest)
+Deploy the Docker Compose setup to a small Compute Engine instance:
+- **Cost**: ~$15/month for e2-micro instance
+- **Setup**: Terraform module for VM with Docker and docker-compose
+- **Management**: Manual updates, automatic startup on boot
+
+#### Option 2: Cloud Run Jobs + Cloud Scheduler
+Convert pipeline tasks to individual Cloud Run Jobs triggered by Cloud Scheduler:
+- **Cost**: Pay-per-use, scales to zero
+- **Setup**: Containerize each task (ingestion, dbt run, dbt test)
+- **Management**: Serverless, no infrastructure to manage
+
+#### Option 3: GKE Autopilot
+Run Airflow on managed Kubernetes:
+- **Cost**: ~$50-100/month depending on usage
+- **Setup**: Deploy Airflow Helm chart with our DAGs
+- **Management**: Google-managed Kubernetes nodes
+
+#### Common Prerequisites for All Options:
+
+```bash
+# Generate environment variables from Terraform outputs
+python scripts/generate_gcp_env.py --format bash > gcp.env
+
+# Create service account key for GCP authentication
+python scripts/create_service_account_key.py
+
+# Set environment variables for cloud execution
+export STORAGE_BACKEND=gcs
+export DBT_TARGET=prod
+source gcp.env
+```
+
+#### Deployment Steps for Option 1: Compute Engine VM
+
+> **Tip**: The `make cloud` command automates all steps below.
+
+1. **Configure Terraform**: Edit `terraform/terraform.tfvars` and set:
+   ```hcl
+   enable_vm          = true
+   vm_source_repo_url = "https://github.com/your-username/citybikes-pipeline.git"  # Your fork
+   ```
+
+2. **Apply infrastructure**: Run `make terraform-apply` to create the VM along with other resources.
+
+3. **Wait for startup**: The VM startup script installs Docker, clones the repository, and starts Airflow (~5 minutes). Monitor progress via Google Cloud Console.
+
+4. **Access Airflow UI**: After startup, navigate to `http://$(terraform output -raw airflow_vm_external_ip):8080` (credentials: admin/admin).
+
+5. **Verify pipeline**: The DAG `citybikes_pipeline` runs hourly. Check the Airflow UI for successful runs.
+
+**Notes**:
+- The VM uses the service account created by Terraform (no key file needed).
+- Port 8080 is open to the internet; restrict firewall rules for production.
+- Data persists in the VM's boot disk; consider separate persistent disk for PostgreSQL.
+- To update the pipeline, push changes to your repository and restart the VM or run `git pull` inside the VM.
+
+For Options 2 and 3, refer to separate deployment guides (to be implemented).
+
+### Cloud Infrastructure with Terraform
+
+Cloud resources (GCS bucket, BigQuery dataset, IAM service account) are managed via Terraform. The `make cloud` command automates the entire provisioning process:
+
+```bash
+# Initialize Terraform
+make terraform-init
+
+# Generate execution plan (requires terraform.tfvars)
+make terraform-plan
+
+# Apply infrastructure changes (requires GCP credentials)
+make terraform-apply
+
+# Show output values (bucket name, dataset ID, service account email)
+make terraform-output
+
+# Format and validate configuration
+make terraform-fmt
+make terraform-validate
+```
+
+**Setup steps:**
+
+1. **Create `terraform.tfvars`**: Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and fill in your GCP project details.
+2. **Configure credentials**: Set `GOOGLE_APPLICATION_CREDENTIALS` environment variable or use `gcloud auth application-default login`.
+3. **Apply infrastructure**: Run `make terraform-apply` to create resources.
+4. **Update environment variables**: After Terraform outputs values, update your `.env` file with:
+   - `GCS_BUCKET_NAME` (from `bucket_name` output)
+   - `DBT_BIGQUERY_PROJECT` (your project ID)
+   - `DBT_BIGQUERY_DATASET` (from `dataset_id` output)
+   - Service account key (manually create and download)
+
+See [terraform/README.md](terraform/README.md) for detailed Terraform module documentation.
 
 ### Development
 

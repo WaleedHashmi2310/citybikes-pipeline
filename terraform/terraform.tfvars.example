@@ -1,0 +1,13 @@
+# Example variable values for CityBikes pipeline infrastructure
+# Copy this file to terraform.tfvars and fill in your actual values
+
+project_id          = "your-gcp-project-id"
+region              = "europe-west1"
+bucket_name         = "your-unique-bucket-name"
+dataset_id          = "citybikes"
+service_account_id  = "citybikes-pipeline-sa"
+environment         = "dev"
+
+# Optional: Compute Engine VM for Airflow orchestration
+enable_vm           = false
+vm_source_repo_url  = "https://github.com/username/citybikes-pipeline.git"

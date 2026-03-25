@@ -5,6 +5,15 @@ Orchestrates the data pipeline:
 1. Ingest data from CityBikes API
 2. Run dbt transformations
 3. Run dbt data tests
+
+Environment variables required for cloud execution:
+- STORAGE_BACKEND: 'gcs' for cloud, 'local' for local
+- DBT_TARGET: 'prod' for BigQuery, 'dev' for DuckDB
+- GCS_BUCKET_NAME: GCS bucket name (for gcs storage)
+- DBT_BIGQUERY_PROJECT: GCP project ID (for BigQuery)
+- DBT_BIGQUERY_DATASET: BigQuery dataset ID
+- GOOGLE_APPLICATION_CREDENTIALS: path to service account key (for gcs storage)
+- CITYBIKES_NETWORKS: comma-separated network IDs (optional)
 """
 
 import os
@@ -33,7 +42,7 @@ dag = DAG(
     "citybikes_pipeline",
     default_args=default_args,
     description="End-to-end CityBikes data pipeline",
-    schedule=timedelta(minutes=10),  # Run every 10 minutes
+    schedule=timedelta(hours=1),  # Run every hour
     catchup=False,
     max_active_runs=1,
     is_paused_upon_creation=False,
@@ -44,7 +53,7 @@ dag = DAG(
 # Task 1: Ingest data from CityBikes API
 ingest = BashOperator(
     task_id="ingest",
-    bash_command="STORAGE_BACKEND=local python scripts/run_ingestion.py",
+    bash_command="python scripts/run_ingestion.py",
     cwd=PROJECT_ROOT,
     dag=dag,
 )
