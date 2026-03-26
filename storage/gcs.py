@@ -2,6 +2,7 @@
 
 import logging
 import tempfile
+import itertools
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
@@ -49,7 +50,7 @@ class GCSStorage(StorageInterface):
     """Store station data to Google Cloud Storage bucket.
 
     Writes Parquet files locally first, then uploads to GCS with retry logic.
-    Maintains same partition structure as LocalStorage.
+    Maintains same partition structure as LocalStorage (date-first: date={date}/city={city}).
 
     Args:
         bucket_name: GCS bucket name
@@ -142,7 +143,7 @@ class GCSStorage(StorageInterface):
             stations: List of normalized station records
 
         Returns:
-            GCS URI where data was written (gs://bucket/path)
+            GCS URI where data was written (gs://bucket/path) - first city's URI
 
         Raises:
             StorageError: If storage operation fails
@@ -152,35 +153,47 @@ class GCSStorage(StorageInterface):
             return f"gs://{self.bucket_name}/"
 
         try:
-            # Write Parquet file locally using LocalStorage
-            local_path = Path(self.local_storage.store_stations(stations))
+            # Sort stations by city for grouping
+            stations_sorted = sorted(stations, key=lambda s: s.city)
+            # Create list of city groups before iterating (to know count)
+            groups = [(city, list(city_stations)) for city, city_stations in itertools.groupby(stations_sorted, key=lambda s: s.city)]
+            first_gcs_uri = None
 
-            # Determine GCS destination path (maintain partition structure)
-            batch_timestamp = stations[0].ingestion_timestamp
-            batch_date = batch_timestamp.date()
-            city = stations[0].city
-            filename = local_path.name
+            # Process each city group
+            for city, city_stations_list in groups:
+                # Write Parquet file locally for this city using LocalStorage
+                local_path = Path(self.local_storage.store_stations(city_stations_list))
 
-            # GCS path: raw/city=CityName/date=YYYY-MM-DD/filename
-            gcs_path = f"raw/city={city}/date={batch_date}/{filename}"
+                # Determine GCS destination path (maintain partition structure)
+                batch_timestamp = city_stations_list[0].ingestion_timestamp
+                batch_date = batch_timestamp.date()
+                filename = local_path.name
 
-            # Upload to GCS with retry logic
-            logger.info(
-                f"Uploading {len(stations)} stations to GCS: "
-                f"gs://{self.bucket_name}/{gcs_path}"
-            )
-            self._upload_to_gcs(local_path, gcs_path)
+                # GCS path: raw/date=YYYY-MM-DD/city=CityName/filename
+                gcs_path = f"raw/date={batch_date}/city={city}/{filename}"
 
-            # Clean up local temporary file
-            try:
-                local_path.unlink()
-                logger.debug(f"Cleaned up temporary file: {local_path}")
-            except Exception as e:
-                logger.warning(f"Failed to clean up temporary file {local_path}: {e}")
+                # Upload to GCS with retry logic
+                logger.info(
+                    f"Uploading {len(city_stations_list)} stations to GCS for city {city}: "
+                    f"gs://{self.bucket_name}/{gcs_path}"
+                )
+                self._upload_to_gcs(local_path, gcs_path)
 
-            gcs_uri = f"gs://{self.bucket_name}/{gcs_path}"
-            logger.info(f"Successfully stored stations to {gcs_uri}")
-            return gcs_uri
+                # Clean up local temporary file
+                try:
+                    local_path.unlink()
+                    logger.debug(f"Cleaned up temporary file: {local_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temporary file {local_path}: {e}")
+
+                gcs_uri = f"gs://{self.bucket_name}/{gcs_path}"
+                if first_gcs_uri is None:
+                    first_gcs_uri = gcs_uri
+
+            logger.info(f"Successfully stored stations for {len(groups)} cities")
+            # first_gcs_uri is guaranteed to be set because groups is non-empty (stations non-empty)
+            assert first_gcs_uri is not None, "No cities processed despite non-empty stations list"
+            return first_gcs_uri
 
         except Exception as e:
             logger.error(f"Failed to store stations to GCS: {e}")

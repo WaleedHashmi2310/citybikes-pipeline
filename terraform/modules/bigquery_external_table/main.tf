@@ -21,12 +21,11 @@ resource "google_bigquery_table" "external_table" {
     ignore_unknown_values = true
     max_bad_records = 0
 
-    # Hive partitioning options for city=CityName/date=YYYY-MM-DD structure
+    # Hive partitioning options for date=YYYY-MM-DD/city=CityName structure
     hive_partitioning_options {
       mode                     = "AUTO"
       source_uri_prefix        = length(var.source_uris) > 0 ? replace(var.source_uris[0], "/*", "") : ""
       require_partition_filter = false
-      fields                   = ["city", "date"]
     }
 
     # Parquet-specific options

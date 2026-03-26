@@ -42,7 +42,7 @@ dag = DAG(
     "citybikes_pipeline",
     default_args=default_args,
     description="End-to-end CityBikes data pipeline",
-    schedule=timedelta(hours=1),  # Run every hour
+    schedule=timedelta(minutes=10),  # Run every hour
     catchup=False,
     max_active_runs=1,
     is_paused_upon_creation=False,

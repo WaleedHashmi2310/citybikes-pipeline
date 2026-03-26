@@ -69,19 +69,21 @@ module "iam_service_account" {
   description        = "Service account for CityBikes data pipeline operations"
 }
 
-# BigQuery external table for raw Parquet files in GCS
-module "bigquery_external_table" {
-  source = "./modules/bigquery_external_table"
-
-  project_id = var.project_id
-  dataset_id = module.bigquery_dataset.dataset_id
-  table_id   = "external_raw_data"
-  source_uris = [
-    "${module.gcs_bucket.url}/raw/*"
-  ]
-  description = "External table for CityBikes raw station data (partitioned by date and city)"
-  labels      = merge(local.common_labels, { component = "external-table" })
-}
+# # BigQuery external table for raw Parquet files in GCS
+# # Commented out: dbt will create external table as needed during pipeline execution
+# # This avoids Terraform dependency on GCS files existing at provisioning time
+# module "bigquery_external_table" {
+#   source = "./modules/bigquery_external_table"
+#
+#   project_id = var.project_id
+#   dataset_id = module.bigquery_dataset.dataset_id
+#   table_id   = "external_raw_data"
+#   source_uris = [
+#     "${module.gcs_bucket.url}/raw/*"
+#   ]
+#   description = "External table for CityBikes raw station data (partitioned by date and city)"
+#   labels      = merge(local.common_labels, { component = "external-table" })
+# }
 
 # Compute Engine VM for Airflow orchestration (optional)
 module "compute_vm" {

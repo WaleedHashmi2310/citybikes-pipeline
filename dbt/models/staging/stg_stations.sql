@@ -1,7 +1,10 @@
 {{
 config(
     materialized='view',
-    schema='staging'
+    schema='staging',
+    pre_hook=[
+        "{{ create_external_raw_data() }}"
+    ]
 )
 }}
 

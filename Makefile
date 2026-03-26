@@ -145,12 +145,22 @@ cloud: setup terraform-init terraform-apply gcp-create-key gcp-generate-env  ## 
 cloud-destroy: terraform-destroy  ## Destroy all GCP resources
 
 cloud-pipeline:  ## Run pipeline directly in cloud mode (requires GCP credentials set)
-	@if [ -f .env ]; then \
+	@echo "Loading environment variables..."; \
+	if [ -f .env ]; then \
+		echo "Sourcing .env..."; \
 		set -a; \
-		source .env; \
+		. ./.env; \
 		set +a; \
-		echo "Sourced environment from .env file"; \
 	fi; \
+	if [ -f gcp.env ]; then \
+		echo "Sourcing gcp.env..."; \
+		set -a; \
+		. ./gcp.env; \
+		set +a; \
+	fi; \
+	export DBT_BIGQUERY_KEYFILE; \
+	export GOOGLE_APPLICATION_CREDENTIALS; \
+	@echo "Running cloud pipeline with STORAGE_BACKEND=gcs DBT_TARGET=prod..."; \
 	STORAGE_BACKEND=gcs DBT_TARGET=prod $(PYTHON) scripts/run_ingestion.py; \
 	DBT_TARGET=prod $(DBT) run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR); \
 	DBT_TARGET=prod $(DBT) test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)

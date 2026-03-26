@@ -1,5 +1,5 @@
 {% macro get_raw_data() %}
-  {# Returns SQL expression to read raw data based on adapter #}
+  {# Returns SQL expression to read raw data based on adapter (partitioned by date then city) #}
 
   {% if target.type == 'duckdb' %}
     -- DuckDB: read local Parquet files

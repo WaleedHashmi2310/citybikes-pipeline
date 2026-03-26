@@ -16,7 +16,7 @@ class LocalStorage(StorageInterface):
     """Store station data as partitioned Parquet files locally.
 
     Partitions data by date (from ingestion_timestamp) and city.
-    Creates directory structure: base_path/city=CityName/date=YYYY-MM-DD/
+    Creates directory structure: base_path/date=YYYY-MM-DD/city=CityName/
 
     Args:
         base_path: Root directory for storage (default: "./data/raw")
@@ -66,7 +66,7 @@ class LocalStorage(StorageInterface):
 
                 # Full path with partitioning
                 full_path = (
-                    self.base_path / f"city={city}" / f"date={batch_date}"
+                    self.base_path / f"date={batch_date}" / f"city={city}"
                 )
 
                 # Ensure directory exists
@@ -76,7 +76,7 @@ class LocalStorage(StorageInterface):
                 # Write Parquet file with partitioning
                 logger.info(
                     f"Writing {len(city_stations_list)} stations to {file_path} "
-                    f"(partitioned by city={city}, date={batch_date})"
+                    f"(partitioned by date={batch_date}, city={city})"
                 )
                 df.to_parquet(file_path, index=False)
 
