@@ -43,9 +43,6 @@ dbt = [
     "dbt-duckdb>=1.7.0",
     "dbt-bigquery>=1.7.0",
 ]
-airflow = [
-    "apache-airflow>=2.7.0",
-]
 
 [project.urls]
 repository = "https://github.com/WaleedHashmi2310/citybikes-pipeline"

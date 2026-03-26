@@ -85,19 +85,3 @@ module "iam_service_account" {
 #   labels      = merge(local.common_labels, { component = "external-table" })
 # }
 
-# Compute Engine VM for Airflow orchestration (optional)
-module "compute_vm" {
-  count  = var.enable_vm ? 1 : 0
-  source = "./modules/compute_vm"
-
-  project_id  = var.project_id
-  region      = var.region
-  zone        = local.zone
-  vm_name     = "citybikes-airflow-${var.environment}"
-  bucket_name = module.gcs_bucket.bucket_name
-  dataset_id  = module.bigquery_dataset.dataset_id
-  bigquery_location = var.region
-  service_account_email = module.iam_service_account.service_account_email
-  source_repo_url = var.vm_source_repo_url
-  labels = merge(local.common_labels, { component = "airflow-vm" })
-}

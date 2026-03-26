@@ -12,7 +12,7 @@ This project implements a robust data pipeline that ingests, stores, transforms,
 - **Storage**: Abstract storage layer supporting local Parquet files and Google Cloud Storage
 - **Warehouse**: DuckDB for local development, BigQuery for cloud production
 - **Transformations**: dbt models for data cleaning and aggregation
-- **Orchestration**: Apache Airflow DAGs for pipeline scheduling
+- **Execution**: Manual pipeline execution via Makefile targets or scheduled via external orchestrator
 - **Infrastructure**: Terraform for cloud resource provisioning
 - **CI/CD**: GitHub Actions for automated testing and deployment
 
@@ -83,10 +83,10 @@ make test                  # Run unit tests
 For streamlined deployment, use these high-level targets:
 
 ```bash
-# Local development: Set up environment and start Airflow with Docker
+# Local development: Set up environment and run full pipeline
 make local
 
-# Cloud deployment: Provision GCP resources and start Airflow VM
+# Cloud deployment: Provision GCP resources and configure environment
 make cloud
 
 # Run pipeline directly in cloud mode (after cloud setup)
@@ -114,37 +114,17 @@ python scripts/run_ingestion.py --storage gcs --bucket your-bucket-name
 python scripts/run_ingestion.py --help
 ```
 
-### Orchestration with Airflow (Docker)
 
-The pipeline is orchestrated using Apache Airflow running in Docker:
+### Cloud Deployment Options
 
-```bash
-# Build and start Airflow with Docker
-make docker-airflow
+For production deployment on Google Cloud Platform, several cost-effective options are available. The `make cloud` command automates infrastructure provisioning (GCS bucket, BigQuery dataset, IAM service account) and environment configuration, but does not deploy an orchestrator. Choose one of these deployment patterns:
 
-# View logs
-make docker-logs
-
-# Stop services
-make docker-down
-```
-
-Access Airflow UI at http://localhost:8080 (admin/admin). The DAG `citybikes_pipeline` runs daily and executes:
-1. Data ingestion from CityBikes API
-2. dbt transformations
-3. Data quality tests
-
-See [docs/RUNNING_AIRFLOW.md](docs/RUNNING_AIRFLOW.md) for detailed instructions.
-
-### Cloud Orchestration on GCP
-
-For production deployment on Google Cloud Platform, several cost-effective options are available. For the simplest deployment experience, use `make cloud` which automates Option 1 (Compute Engine VM):
-
-#### Option 1: Compute Engine VM (Cheapest)
-Deploy the Docker Compose setup to a small Compute Engine instance:
+#### Option 1: Compute Engine VM (Manual Setup)
+Deploy the pipeline to a small Compute Engine instance and run it manually or via cron:
 - **Cost**: ~$15/month for e2-micro instance
-- **Setup**: Terraform module for VM with Docker and docker-compose
+- **Setup**: Manual VM creation, install dependencies, clone repository
 - **Management**: Manual updates, automatic startup on boot
+- **Execution**: Run `make cloud-pipeline` manually or schedule via cron
 
 #### Option 2: Cloud Run Jobs + Cloud Scheduler
 Convert pipeline tasks to individual Cloud Run Jobs triggered by Cloud Scheduler:
@@ -152,50 +132,36 @@ Convert pipeline tasks to individual Cloud Run Jobs triggered by Cloud Scheduler
 - **Setup**: Containerize each task (ingestion, dbt run, dbt test)
 - **Management**: Serverless, no infrastructure to manage
 
-#### Option 3: GKE Autopilot
-Run Airflow on managed Kubernetes:
+#### Option 3: GKE Autopilot (Kubernetes)
+Run pipeline on managed Kubernetes using Kubernetes Jobs or an orchestrator like Argo Workflows:
 - **Cost**: ~$50-100/month depending on usage
-- **Setup**: Deploy Airflow Helm chart with our DAGs
+- **Setup**: Deploy pipeline containers to GKE Autopilot
 - **Management**: Google-managed Kubernetes nodes
+- **Execution**: Schedule via Kubernetes CronJobs or workflow orchestrator
 
 #### Common Prerequisites for All Options:
 
 ```bash
-# Generate environment variables from Terraform outputs
-python scripts/generate_gcp_env.py --format bash > gcp.env
+# Generate environment variables from Terraform outputs and update .env file
+python scripts/generate_gcp_env.py --format dotenv --update-env
 
-# Create service account key for GCP authentication
+# Create service account key for GCP authentication (updates .env automatically)
 python scripts/create_service_account_key.py
 
 # Set environment variables for cloud execution
 export STORAGE_BACKEND=gcs
 export DBT_TARGET=prod
-source gcp.env
+source .env  # or use export $(grep -v '^#' .env | xargs)
 ```
 
-#### Deployment Steps for Option 1: Compute Engine VM
+#### Manual VM Setup (Option 1):
+If you choose Option 1, follow these general steps:
 
-> **Tip**: The `make cloud` command automates all steps below.
-
-1. **Configure Terraform**: Edit `terraform/terraform.tfvars` and set:
-   ```hcl
-   enable_vm          = true
-   vm_source_repo_url = "https://github.com/your-username/citybikes-pipeline.git"  # Your fork
-   ```
-
-2. **Apply infrastructure**: Run `make terraform-apply` to create the VM along with other resources.
-
-3. **Wait for startup**: The VM startup script installs Docker, clones the repository, and starts Airflow (~5 minutes). Monitor progress via Google Cloud Console.
-
-4. **Access Airflow UI**: After startup, navigate to `http://$(terraform output -raw airflow_vm_external_ip):8080` (credentials: admin/admin).
-
-5. **Verify pipeline**: The DAG `citybikes_pipeline` runs hourly. Check the Airflow UI for successful runs.
-
-**Notes**:
-- The VM uses the service account created by Terraform (no key file needed).
-- Port 8080 is open to the internet; restrict firewall rules for production.
-- Data persists in the VM's boot disk; consider separate persistent disk for PostgreSQL.
-- To update the pipeline, push changes to your repository and restart the VM or run `git pull` inside the VM.
+1. **Create a Compute Engine VM** with desired specifications (e2-micro recommended)
+2. **Install dependencies**: Docker, docker-compose, Python, git
+3. **Clone repository** and copy pipeline code to VM
+4. **Copy service account key** and `.env` file to VM
+5. **Run pipeline manually**: `make cloud-pipeline` or schedule via cron
 
 For Options 2 and 3, refer to separate deployment guides (to be implemented).
 
@@ -226,11 +192,13 @@ make terraform-validate
 1. **Create `terraform.tfvars`**: Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and fill in your GCP project details.
 2. **Configure credentials**: Set `GOOGLE_APPLICATION_CREDENTIALS` environment variable or use `gcloud auth application-default login`.
 3. **Apply infrastructure**: Run `make terraform-apply` to create resources.
-4. **Update environment variables**: After Terraform outputs values, update your `.env` file with:
-   - `GCS_BUCKET_NAME` (from `bucket_name` output)
-   - `DBT_BIGQUERY_PROJECT` (your project ID)
-   - `DBT_BIGQUERY_DATASET` (from `dataset_id` output)
-   - Service account key (manually create and download)
+4. **Configure environment**: Use the automation scripts to update `.env` with Terraform outputs and create service account key:
+   ```bash
+   # Update .env with GCS bucket, BigQuery dataset, and project
+   python scripts/generate_gcp_env.py --format dotenv --update-env
+   # Create service account key and update .env with key file path
+   python scripts/create_service_account_key.py
+   ```
 
 See [terraform/README.md](terraform/README.md) for detailed Terraform module documentation.
 

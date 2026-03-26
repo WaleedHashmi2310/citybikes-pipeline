@@ -30,17 +30,3 @@ output "service_account_email" {
   value       = module.iam_service_account.service_account_email
 }
 
-output "airflow_vm_external_ip" {
-  description = "External IP address of the Airflow VM (if created)"
-  value       = try(module.compute_vm[0].external_ip, null)
-}
-
-output "airflow_vm_internal_ip" {
-  description = "Internal IP address of the Airflow VM (if created)"
-  value       = try(module.compute_vm[0].internal_ip, null)
-}
-
-output "airflow_vm_name" {
-  description = "Name of the Airflow VM (if created)"
-  value       = try(module.compute_vm[0].vm_name, null)
-}

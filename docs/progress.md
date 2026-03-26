@@ -32,14 +32,9 @@
 * [x] Mart models
 * [x] Tests
 
-## Phase 4: Airflow
+## Phase 4: Orchestration (removed)
 
-* [x] DAG created
-* [x] Tasks connected
-* [x] Local run successful
-* [x] Docker orchestration setup
-* [x] Makefile automation
-* [x] Airflow UI accessible
+* [x] Airflow/Kestra orchestration removed from project
 
 ## Phase 5: Cloud
 

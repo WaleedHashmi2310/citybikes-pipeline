@@ -34,14 +34,4 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "enable_vm" {
-  description = "Whether to create a Compute Engine VM for Airflow orchestration"
-  type        = bool
-  default     = false
-}
 
-variable "vm_source_repo_url" {
-  description = "Git repository URL for the VM to clone"
-  type        = string
-  default     = "https://github.com/username/citybikes-pipeline.git"
-}

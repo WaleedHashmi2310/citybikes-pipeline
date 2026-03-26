@@ -19,13 +19,13 @@
 * Native integration with GCS
 * Works with Looker
 
-## Airflow (Docker)
+## Manual Execution via Makefile
 
-* Industry standard orchestration
-* DAG-based control
-* Docker Compose for local development and production-like environment
-* PostgreSQL backend for metadata storage
-* Custom image with project dependencies baked in
+* Simplified orchestration using Makefile targets
+* No dedicated orchestrator dependency
+* Easy local development with `make pipeline`
+* Cloud execution with `make cloud-pipeline`
+* Environment-based configuration for local/cloud modes
 
 ## Append-Only Strategy
 
@@ -45,7 +45,7 @@
 
 ## Minimal Monitoring
 
-* Airflow logs
+* Pipeline logs
 * dbt tests
 * No heavy observability tools
 

@@ -2,7 +2,7 @@
 # Author: Claude Code
 # Date: 2026-03-24
 
-.PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean all docker-build docker-up docker-down docker-logs docker-init docker-airflow docker-stop docker-clean docker-resume env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
+.PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean all env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
 
 # Variables
 VENV = .venv
@@ -81,38 +81,13 @@ dbt-clean:  ## Clean dbt artifacts
 
 all: install test dbt-run dbt-test  ## Run full pipeline: install, test, transform, test data
 
-# Docker Airflow targets
-docker-build:  ## Build Docker image for Airflow
-	docker compose build
 
-docker-up:  ## Start Airflow with Docker Compose
-	docker compose up -d postgres airflow-webserver airflow-scheduler
-
-docker-down:  ## Stop Airflow Docker Compose services
-	docker compose down
-
-docker-logs:  ## View Airflow Docker Compose logs
-	docker compose logs -f
-
-docker-init:  ## Initialize Airflow database (one-time setup)
-	docker compose up airflow-init
-
-docker-airflow: docker-build docker-init docker-up  ## Build, initialize, and start Airflow with Docker
-
-docker-stop:  ## Gracefully stop Airflow containers (without removing)
-	docker compose stop
-
-docker-clean:  ## Completely remove Airflow containers, networks, and volumes
-	docker compose down -v --remove-orphans
-
-docker-resume:  ## Resume previously stopped Airflow containers
-	docker compose start
 
 # GCP deployment utilities
-gcp-generate-env:  ## Generate environment variables for GCP from Terraform outputs
-	python scripts/generate_gcp_env.py --format bash
+gcp-generate-env:  ## Generate environment variables for GCP from Terraform outputs and update .env file
+	python scripts/generate_gcp_env.py --format dotenv --update-env
 
-gcp-create-key:  ## Create GCP service account key for authentication
+gcp-create-key:  ## Create GCP service account key for authentication and write to file specified in .env (DBT_BIGQUERY_KEYFILE and GOOGLE_APPLICATION_CREDENTIALS)
 	python scripts/create_service_account_key.py
 
 # Terraform infrastructure targets
@@ -138,9 +113,9 @@ terraform-validate:  ## Validate Terraform configuration
 	cd $(TERRAFORM_DIR) && terraform validate
 
 # High-level orchestration targets
-local: setup docker-airflow  ## Set up local environment and start Airflow with Docker
+local: setup pipeline  ## Set up local environment and run pipeline
 
-cloud: setup terraform-init terraform-apply gcp-create-key gcp-generate-env  ## Deploy to GCP: provision infrastructure, create service account key, start Airflow VM
+cloud: setup terraform-init terraform-apply gcp-create-key gcp-generate-env  ## Deploy to GCP: provision infrastructure (GCS, BigQuery, IAM)
 
 cloud-destroy: terraform-destroy  ## Destroy all GCP resources
 

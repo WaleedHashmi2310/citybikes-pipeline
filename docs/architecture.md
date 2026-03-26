@@ -40,11 +40,12 @@ API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
   * staging
   * marts
 
-### 5. Orchestration
+### 5. Execution
 
-* Airflow DAG:
+* Manual pipeline execution via Makefile targets:
 
-  * ingest → store → dbt run → dbt test
+  * `make pipeline` (local) / `make cloud-pipeline` (cloud)
+  * Sequence: ingest → store → dbt run → dbt test
 
 ### 6. Visualization
 

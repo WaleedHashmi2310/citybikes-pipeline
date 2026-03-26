@@ -8,6 +8,4 @@ dataset_id          = "citybikes"
 service_account_id  = "citybikes-pipeline-sa"
 environment         = "dev"
 
-# Optional: Compute Engine VM for Airflow orchestration
-enable_vm           = false
-vm_source_repo_url  = "https://github.com/username/citybikes-pipeline.git"
+# Note: VM orchestration removed. Pipeline runs manually or via external scheduler.

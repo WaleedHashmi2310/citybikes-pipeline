@@ -5,6 +5,9 @@ Create a service account key for the CityBikes pipeline service account.
 Usage:
     python scripts/create_service_account_key.py [--output FILE] [--project PROJECT_ID]
 
+Creates a service account key file and updates .env with DBT_BIGQUERY_KEYFILE and
+GOOGLE_APPLICATION_CREDENTIALS variables pointing to the key file.
+
 Requires gcloud CLI to be installed and authenticated.
 """
 
@@ -49,26 +52,62 @@ def create_service_account_key(service_account_email, output_file, project_id=No
         print("Error: gcloud CLI not found. Please install Google Cloud SDK.", file=sys.stderr)
         sys.exit(1)
 
+def update_env_file(key_file, env_file=".env"):
+    """Update .env file with key file path for DBT_BIGQUERY_KEYFILE and GOOGLE_APPLICATION_CREDENTIALS."""
+    env_path = Path(env_file) if Path(env_file).is_absolute() else Path(__file__).parent.parent / env_file
+    existing_lines = []
+    updated_vars = set()
+
+    # Variables to update
+    vars_to_update = {
+        "DBT_BIGQUERY_KEYFILE": key_file,
+        "GOOGLE_APPLICATION_CREDENTIALS": key_file
+    }
+
+    # Read existing .env file if it exists
+    if env_path.exists():
+        with open(env_path, "r") as f:
+            existing_lines = f.readlines()
+
+    # Process each line, updating variables that match
+    new_lines = []
+    for line in existing_lines:
+        line = line.rstrip('\n')
+        # Skip empty lines and comments
+        if not line.strip() or line.strip().startswith('#'):
+            new_lines.append(line)
+            continue
+
+        # Parse KEY=VALUE
+        if '=' in line:
+            key = line.split('=', 1)[0].strip()
+            if key in vars_to_update:
+                # Update this line with new value
+                value = vars_to_update[key]
+                value = str(value).replace('\n', '\\n').replace('\r', '\\r')
+                new_lines.append(f"{key}={value}")
+                updated_vars.add(key)
+                continue
+
+        # Keep line as-is
+        new_lines.append(line)
+
+    # Add any new variables that weren't in the file
+    for key, value in sorted(vars_to_update.items()):
+        if key not in updated_vars:
+            value = str(value).replace('\n', '\\n').replace('\r', '\\r')
+            new_lines.append(f"{key}={value}")
+
+    # Write back to file
+    with open(env_path, "w") as f:
+        f.write("\n".join(new_lines) + "\n")
+
+    print(f"Updated .env file at {env_path} with key file path")
+    return env_path
+
 def print_deployment_instructions(key_file, service_account_email):
     """Print instructions for using the service account key in GCP deployments."""
     print("\n" + "="*60)
-    print("GCP Deployment Instructions")
-    print("="*60)
-    print(f"\nService account key created: {key_file}")
-    print(f"Service account email: {service_account_email}")
-    print("\nChoose one of these deployment options (see README.md for details):")
-    print("\nOption 1: Compute Engine VM (Cheapest ~$15/month)")
-    print("  - Deploy Docker Compose setup to a small Compute Engine instance")
-    print("  - Copy the key file to the VM and set GOOGLE_APPLICATION_CREDENTIALS")
-    print("  - Use environment variables from generate_gcp_env.py")
-    print("\nOption 2: Cloud Run Jobs + Cloud Scheduler (Pay-per-use)")
-    print("  - Containerize each task (ingestion, dbt run, dbt test)")
-    print("  - Mount the key as a secret in Cloud Run")
-    print("  - Trigger jobs via Cloud Scheduler")
-    print("\nOption 3: GKE Autopilot (~$50-100/month)")
-    print("  - Deploy Airflow Helm chart on managed Kubernetes")
-    print("  - Create a Kubernetes secret from the key file")
-    print("  - Set environment variables in pod spec")
     print("\nCommon setup steps:")
     print("  1. Set environment variables for cloud execution:")
     print("     export STORAGE_BACKEND=gcs")
@@ -118,6 +157,9 @@ def main():
 
     # Create key
     create_service_account_key(service_account_email, args.output, project_id)
+
+    # Update .env file with key file path
+    update_env_file(args.output)
 
     # Print instructions
     print_deployment_instructions(args.output, service_account_email)

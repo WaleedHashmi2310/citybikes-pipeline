@@ -28,7 +28,7 @@ project_root/
 │   ├── profiles/           # DuckDB and BigQuery profiles
 │   └── dbt_project.yml
 │
-├── airflow/                # Airflow orchestration (Docker only)
+├── airflow/                # (Orchestration removed - directory kept for reference)
 │   ├── dags/
 │   │   └── citybikes_pipeline.py
 │   └── plugins/
@@ -58,8 +58,6 @@ project_root/
 * `Makefile` – Common development tasks
 * `CLAUDE.md` – Project instructions and phase order
 * `README.md` – Getting started guide
-* `docker-compose.yml` – Airflow services definition
-* `Dockerfile` – Custom Airflow image
 * `.env.example` – Environment variables template
 * `.gitignore` – Git ignore rules
 
@@ -70,7 +68,6 @@ The `docs/` directory contains:
 * `structure.md` – Repository structure (this file)
 * `progress.md` – Phase completion status
 * `decisions.md` – Architectural decision records
-* `RUNNING_AIRFLOW.md` – Airflow Docker setup and usage
 
 ## Naming Conventions
 
@@ -92,8 +89,8 @@ The `docs/` directory contains:
 ### dbt/
 * transformations only
 
-### airflow/
-* orchestration only (Docker-based)
+### airflow/ (deprecated)
+* orchestration removed (directory kept for reference)
 
 ### scripts/
 * command-line utilities
