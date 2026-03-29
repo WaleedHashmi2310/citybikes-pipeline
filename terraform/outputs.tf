@@ -30,3 +30,12 @@ output "service_account_email" {
   value       = module.iam_service_account.service_account_email
 }
 
+output "vm_external_ip" {
+  description = "External IP of the Airflow VM"
+  value       = module.compute_vm.external_ip
+}
+
+output "ssh_command" {
+  description = "SSH command to connect to the VM"
+  value       = module.compute_vm.ssh_command
+}

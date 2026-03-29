@@ -69,14 +69,33 @@ module "iam_service_account" {
   description        = "Service account for CityBikes data pipeline operations"
 }
 
-# Compute VM for Airflow orchestration
-module "compute_vm" {
-  source = "./modules/compute"
+# # BigQuery external table for raw Parquet files in GCS
+# module "bigquery_external_table" {
+#   source = "./modules/bigquery_external_table"
 
-  vm_name               = "citybikes-airflow-vm"
-  machine_type          = "e2-medium"
-  zone                  = local.zone
-  region                = var.region
+#   project_id = var.project_id
+#   dataset_id = module.bigquery_dataset.dataset_id
+#   table_id   = "external_raw_data"
+#   source_uris = [
+#     "${module.gcs_bucket.url}/raw/*"
+#   ]
+#   description = "External table for CityBikes raw station data (partitioned by date and city)"
+#   labels      = merge(local.common_labels, { component = "external-table" })
+# }
+
+# Compute Engine VM for Airflow orchestration (optional)
+module "compute_vm" {
+  count  = var.enable_vm ? 1 : 0
+  source = "./modules/compute_vm"
+
+  project_id  = var.project_id
+  region      = var.region
+  zone        = local.zone
+  vm_name     = "citybikes-airflow-${var.environment}"
+  bucket_name = module.gcs_bucket.bucket_name
+  dataset_id  = module.bigquery_dataset.dataset_id
+  bigquery_location = var.region
   service_account_email = module.iam_service_account.service_account_email
-  labels                = merge(local.common_labels, { component = "orchestration" })
+  source_repo_url = var.vm_source_repo_url
+  labels = merge(local.common_labels, { component = "airflow-vm" })
 }
