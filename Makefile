@@ -119,6 +119,17 @@ cloud: setup terraform-init terraform-apply gcp-create-key gcp-generate-env  ## 
 
 cloud-destroy: terraform-destroy  ## Destroy all GCP resources
 
+airflow-up:  ## Start Airflow locally
+	mkdir -p data/raw
+	chmod -R 777 data/
+	cd airflow && AIRFLOW_UID=$$(id -u) docker compose up -d --build
+
+airflow-down:  ## Stop Airflow
+	cd airflow && docker compose down
+
+airflow-reset:  ## Stop Airflow and wipe volumes
+	cd airflow && docker compose down -v
+
 cloud-pipeline:  ## Run pipeline directly in cloud mode (requires GCP credentials set)
 	@echo "Loading environment variables..."; \
 	if [ -f .env ]; then \

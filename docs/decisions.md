@@ -27,6 +27,15 @@
 * Cloud execution with `make cloud-pipeline`
 * Environment-based configuration for local/cloud modes
 
+## Airflow for Local Orchestration
+
+* Provides scheduled execution (every 30 minutes) without manual intervention
+* Docker Compose setup for easy local deployment
+* UI for monitoring DAG runs and logs
+* Retry logic and dependency management built-in
+* Maintains manual Makefile targets for development and cloud execution
+* LocalExecutor with PostgreSQL backend for simplicity
+
 ## Append-Only Strategy
 
 * Preserves history

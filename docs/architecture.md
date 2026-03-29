@@ -10,6 +10,8 @@ This project builds a modular data pipeline using the CityBikes API.
 
 API → Python Ingestion → Parquet (Local FS) → DuckDB → dbt → Marts
 
+Orchestration: manual (`make pipeline`) or automated (Airflow DAG scheduled every 30 minutes)
+
 ### Cloud Mode
 
 API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
@@ -40,12 +42,19 @@ API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
   * staging
   * marts
 
-### 5. Execution
+### 5. Orchestration Layer
 
-* Manual pipeline execution via Makefile targets:
+* **Manual execution**: Makefile targets for local development and testing:
 
   * `make pipeline` (local) / `make cloud-pipeline` (cloud)
   * Sequence: ingest → store → dbt run → dbt test
+
+* **Automated orchestration**: Apache Airflow for scheduled local pipeline runs:
+
+  * Docker Compose setup with PostgreSQL backend and LocalExecutor
+  * DAG scheduled every 30 minutes (`citybikes_pipeline`)
+  * Tasks: ingest_local (STORAGE_BACKEND=local) → dbt_run → dbt_test
+  * Make targets: `airflow-up`, `airflow-down`, `airflow-reset`
 
 ### 6. Visualization
 

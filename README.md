@@ -12,7 +12,7 @@ This project implements a robust data pipeline that ingests, stores, transforms,
 - **Storage**: Abstract storage layer supporting local Parquet files and Google Cloud Storage
 - **Warehouse**: DuckDB for local development, BigQuery for cloud production
 - **Transformations**: dbt models for data cleaning and aggregation
-- **Execution**: Manual pipeline execution via Makefile targets or scheduled via external orchestrator
+- **Execution**: Manual pipeline execution via Makefile targets or scheduled via Apache Airflow (local)
 - **Infrastructure**: Terraform for cloud resource provisioning
 - **CI/CD**: GitHub Actions for automated testing and deployment
 
@@ -95,6 +95,27 @@ make cloud-pipeline
 # Destroy all GCP resources
 make cloud-destroy
 ```
+
+### Local Orchestration with Apache Airflow
+
+For scheduled local orchestration, you can run the pipeline using Apache Airflow in Docker containers:
+
+```bash
+# Start Airflow (PostgreSQL + LocalExecutor)
+make airflow-up
+
+# Stop Airflow
+make airflow-down
+
+# Reset Airflow (stop and wipe volumes)
+make airflow-reset
+```
+
+Access the Airflow UI at http://localhost:8080 (admin/admin) to monitor DAG runs and logs.
+
+The Airflow setup mounts the project directory as a volume, so code changes are reflected without rebuilding the image. Raw data is stored in `data/raw` and the DuckDB database in `citybikes.duckdb`.
+
+The DAG `citybikes_pipeline` runs every 30 minutes, executing ingestion (local storage), dbt run, and dbt test tasks.
 
 ### Manual Usage
 

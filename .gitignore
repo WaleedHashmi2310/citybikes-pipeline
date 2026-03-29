@@ -172,3 +172,6 @@ secrets.auto.tfvars
 *.json
 *.key
 *.pem
+
+# Kestra
+kestra/storage/

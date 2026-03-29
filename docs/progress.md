@@ -32,9 +32,14 @@
 * [x] Mart models
 * [x] Tests
 
-## Phase 4: Orchestration (removed)
+## Phase 4: Orchestration (Airflow)
 
-* [x] Airflow/Kestra orchestration removed from project
+* [x] Airflow Docker Compose setup
+* [x] Custom Dockerfile with dependencies
+* [x] DAG implementing pipeline (ingest → dbt run → dbt test)
+* [x] LocalExecutor with PostgreSQL backend
+* [x] Make targets for Airflow management (airflow-up, airflow-down, airflow-reset)
+* [x] Pipeline scheduled every 30 minutes
 
 ## Phase 5: Cloud
 

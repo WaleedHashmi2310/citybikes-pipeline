@@ -1,0 +1,53 @@
+# Dockerignore for CityBikes pipeline
+
+# Data directories
+data/raw/
+data/processed/
+
+# Virtual environment
+.venv/
+
+# Git
+.git/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# dbt artifacts
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment files
+.env
+gcp.env
+*.json
+*.key
+
+# DuckDB files
+*.duckdb
+
+# Kestra storage
+kestra/storage/
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+.terraform/
