@@ -11,10 +11,11 @@ with daily_station_data as (
         name,
         city,
         date,
-        -- Calculate total slots per reading
-        free_bikes + empty_slots as total_slots,
+        -- Use provided slots if available, otherwise infer from free_bikes + empty_slots
+        coalesce(slots, free_bikes + empty_slots) as total_slots,
         free_bikes,
         empty_slots,
+        slots,
         station_timestamp,
         ingestion_timestamp
     from {{ ref('stg_stations') }}

@@ -1,5 +1,6 @@
 """Local Parquet storage implementation."""
 
+import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -105,6 +106,9 @@ class LocalStorage(StorageInterface):
             station_dict = station.model_dump(by_alias=True)
             # Ensure station_id field is present (alias for 'id')
             station_dict["station_id"] = station_dict.pop("id", station.station_id)
+            # Convert extra dict to JSON string for compatibility
+            if station_dict.get("extra") is not None:
+                station_dict["extra"] = json.dumps(station_dict["extra"])
             # Add partition columns per station
             station_dict["city"] = station.city
             station_dict["date"] = station.ingestion_timestamp.date().isoformat()
@@ -121,6 +125,8 @@ class LocalStorage(StorageInterface):
             "longitude",
             "free_bikes",
             "empty_slots",
+            "slots",
+            "extra",
             "timestamp",
             "ingestion_timestamp",
             "city",

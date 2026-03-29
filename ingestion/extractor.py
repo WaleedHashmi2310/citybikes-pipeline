@@ -62,6 +62,22 @@ class CityBikesExtractor:
         normalized_stations = []
         for station in network_details.stations:
             try:
+                # Calculate slots from extra.slots if available and numeric, otherwise infer
+                slots = None
+                if station.extra and hasattr(station.extra, 'slots') and station.extra.slots is not None:
+                    try:
+                        slots = int(station.extra.slots)
+                    except (ValueError, TypeError):
+                        # If slots is not convertible to int, fall back to inference
+                        slots = station.free_bikes + station.empty_slots
+                else:
+                    slots = station.free_bikes + station.empty_slots
+
+                # Convert extra to dict for JSON storage
+                extra_dict = None
+                if station.extra:
+                    extra_dict = station.extra.model_dump()
+
                 normalized = NormalizedStation(
                     id=station.id,
                     name=station.name,
@@ -69,9 +85,11 @@ class CityBikesExtractor:
                     longitude=station.longitude,
                     free_bikes=station.free_bikes,
                     empty_slots=station.empty_slots,
+                    slots=slots,
                     timestamp=self._clean_timestamp(station.timestamp),
                     ingestion_timestamp=ingestion_timestamp,
                     city=city,
+                    extra=extra_dict,
                 )
                 normalized_stations.append(normalized)
             except Exception as e:

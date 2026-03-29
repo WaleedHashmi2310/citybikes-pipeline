@@ -53,6 +53,7 @@ project_root/
 ├── scripts/                # Utility scripts for development and operations
 │   ├── run_ingestion.py    # CLI script to run the ingestion pipeline
 │   ├── generate_sample_data.py # Generate sample data for testing
+│   ├── historical_load.py  # Generate historical data with time patterns
 │   ├── create_service_account_key.py # Create GCP service account key
 │   └── generate_gcp_env.py # Generate environment variables for GCP
 │
@@ -110,7 +111,7 @@ The `docs/` directory contains:
 ### dbt/
 * SQL transformations only (no business logic in ingestion)
 * staging models clean raw data
-* mart models create business-level aggregates
+* mart models create business-level aggregates (station utilization, city hourly trends, city comparison, station ranking, weekly trends)
 
 ### airflow/
 * Orchestration using Apache Airflow

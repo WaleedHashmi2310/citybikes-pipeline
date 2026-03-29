@@ -76,6 +76,7 @@ make ingest-local           # Extract data and store as Parquet files
 make dbt-run               # Run dbt transformations
 make dbt-test              # Run data quality tests
 make test                  # Run unit tests
+make historical-load       # Generate historical data with time patterns
 ```
 
 ### Simplified Workflow
@@ -116,6 +117,21 @@ Access the Airflow UI at http://localhost:8080 (admin/admin) to monitor DAG runs
 The Airflow setup mounts the project directory as a volume, so code changes are reflected without rebuilding the image. Raw data is stored in `data/raw` and the DuckDB database in `citybikes.duckdb`.
 
 The DAG `citybikes_pipeline` runs every 30 minutes, executing ingestion (local storage), dbt run, and dbt test tasks.
+
+### Historical Data Generation
+
+Generate realistic historical station data for testing time-series analytics:
+
+```bash
+# Generate data for last 7 days with 30-minute intervals
+make historical-load
+
+# Custom parameters via environment variables
+make historical-load HISTORICAL_DAYS_BACK=3 HISTORICAL_INTERVAL_MINUTES=60
+
+# Direct script usage
+python scripts/historical_load.py --days-back 3 --interval-minutes 120 --networks "callabike-berlin,stadtrad-hamburg-db" --storage local
+```
 
 ### Manual Usage
 

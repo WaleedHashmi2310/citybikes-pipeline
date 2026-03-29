@@ -24,6 +24,7 @@ API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
 * Normalize schema
 * Append timestamp
 * Write to storage
+* Historical data generation with realistic time patterns (scripts/historical_load.py)
 
 ### 2. Storage Layer
 
@@ -70,14 +71,19 @@ API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
 * longitude
 * free_bikes
 * empty_slots
+* slots – total station capacity (derived from extra.slots or free_bikes + empty_slots)
+* extra – JSON string containing operational metadata (renting, returning, etc.)
 * timestamp
 * ingestion_timestamp
 * city
 
 ### Marts
 
-* station utilization
-* city-level aggregations
+* station utilization – daily station-level metrics
+* city hourly trends – hourly aggregation by city
+* city comparison – city-level daily comparison metrics
+* station ranking – station ranking by utilization within city
+* weekly trends – weekly aggregation by city
 
 ## Environments
 

@@ -22,11 +22,13 @@ config(
             longitude,
             free_bikes,
             empty_slots,
+            slots,
+            extra,
             timestamp as station_timestamp,
             ingestion_timestamp,
             city,
             date
-        from read_parquet('{{ var("raw_data_path", "data/raw") }}/**/*.parquet')
+        from read_parquet('{{ var("raw_data_path", "/data/raw") }}/**/*.parquet')
     )
 
     select
@@ -36,6 +38,8 @@ config(
         longitude,
         free_bikes,
         empty_slots,
+        slots,
+        extra,
         -- DuckDB: cast directly (Parquet types should match)
         cast(station_timestamp as timestamp) as station_timestamp,
         cast(ingestion_timestamp as timestamp) as ingestion_timestamp,
@@ -53,6 +57,8 @@ config(
             longitude,
             free_bikes,
             empty_slots,
+            slots,
+            extra,
             timestamp as station_timestamp,
             ingestion_timestamp,
             city,
@@ -67,6 +73,8 @@ config(
         longitude,
         free_bikes,
         empty_slots,
+        slots,
+        extra,
         -- BigQuery: timestamp is ISO string, ingestion_timestamp is nanoseconds
         TIMESTAMP(station_timestamp) as station_timestamp,
         TIMESTAMP_SECONDS(CAST(ingestion_timestamp / 1000000000 AS INT64)) as ingestion_timestamp,

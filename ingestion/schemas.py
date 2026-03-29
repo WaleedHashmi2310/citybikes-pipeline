@@ -1,7 +1,7 @@
 """Pydantic schemas for CityBikes API data."""
 
 from datetime import datetime
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict, Any
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
@@ -104,8 +104,10 @@ class NormalizedStation(BaseModel):
     longitude: float
     free_bikes: int
     empty_slots: int
+    slots: Optional[int] = None  # Total capacity from extra.slots, or free_bikes + empty_slots
     timestamp: str  # Original station timestamp from API
     ingestion_timestamp: datetime  # When we ingested the data
     city: str  # City name from network location
+    extra: Optional[Dict[str, Any]] = None  # Raw extra field as JSON
 
     model_config = ConfigDict(populate_by_name=True, extra="ignore")

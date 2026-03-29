@@ -28,6 +28,10 @@ models:
         description: "Number of empty slots"
         tests:
           - not_null
+      - name: slots
+        description: "Total station capacity (from extra.slots or free_bikes + empty_slots)"
+      - name: extra
+        description: "Raw extra field as JSON string containing operational metadata"
       - name: station_timestamp
         description: "Original timestamp from API (UTC)"
         tests:

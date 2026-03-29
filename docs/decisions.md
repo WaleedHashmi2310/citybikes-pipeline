@@ -58,6 +58,12 @@
 * dbt tests
 * No heavy observability tools
 
+## Historical Data Generation
+
+* Generate realistic test data with time-based patterns
+* Supports local and cloud storage backends
+* Configurable date ranges and intervals
+
 ## CI/CD (Basic)
 
 * Lint + pytest

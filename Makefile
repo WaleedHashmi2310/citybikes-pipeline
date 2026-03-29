@@ -2,7 +2,7 @@
 # Author: Claude Code
 # Date: 2026-03-24
 
-.PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean all env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
+.PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean dbt-build historical-load all env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
 
 # Variables
 VENV = .venv
@@ -15,6 +15,12 @@ DBT_PROJECT_DIR = dbt
 RAW_DATA_PATH = data/raw
 TERRAFORM_DIR = terraform
 NETWORKS ?= callabike-frankfurt,visa-frankfurt,callabike-koln,kvb-rad-koln,nextbike-dusseldorf,stadtrad-hamburg-db,callabike-munchen,stadtrad-stuttgart,mobibike-dresden,nextbike-leipzig,callabike-berlin,mvg-meinrad-nextbike-mainz
+
+# Historical data generation variables
+HISTORICAL_DAYS_BACK ?= 7
+HISTORICAL_INTERVAL_MINUTES ?= 30
+STORAGE_BACKEND ?= gcs
+GCS_BUCKET_NAME ?= citybikes-de-pipeline-raw
 
 # Determine OS for activate script
 ifeq ($(OS),Windows_NT)
@@ -65,6 +71,9 @@ ingest-networks:  ## Run ingestion with specific networks (set NETWORKS variable
 generate-sample-data:  ## Generate sample Parquet data for testing
 	$(PYTHON) scripts/generate_sample_data.py
 
+historical-load:  ## Generate historical data (customize with HISTORICAL_DAYS_BACK, HISTORICAL_INTERVAL_MINUTES, NETWORKS, STORAGE_BACKEND, GCS_BUCKET_NAME)
+	$(PYTHON) scripts/historical_load.py --days-back $(HISTORICAL_DAYS_BACK) --interval-minutes $(HISTORICAL_INTERVAL_MINUTES) --networks "$(NETWORKS)" --storage $(STORAGE_BACKEND) $(if $(GCS_BUCKET_NAME),--bucket $(GCS_BUCKET_NAME)) --clear-existing
+
 dbt-run:  ## Run dbt models (requires installed dbt dependencies)
 	$(DBT) run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
@@ -78,6 +87,9 @@ dbt-docs:  ## Generate dbt documentation
 
 dbt-clean:  ## Clean dbt artifacts
 	$(DBT) clean --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
+
+dbt-build: dbt-clean  ## Run dbt build from scratch (clean + build)
+	$(DBT) build --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
 all: install test dbt-run dbt-test  ## Run full pipeline: install, test, transform, test data
 

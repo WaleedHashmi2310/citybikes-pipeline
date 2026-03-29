@@ -29,7 +29,7 @@
 * [x] DuckDB profile
 * [x] BigQuery profile
 * [x] Staging models
-* [x] Mart models
+* [x] Mart models (5 marts: station utilization, city hourly trends, city comparison, station ranking, weekly trends)
 * [x] Tests
 
 ## Phase 4: Orchestration (Airflow)
