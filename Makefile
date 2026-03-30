@@ -7,6 +7,10 @@ export
 
 .PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean dbt-build historical-load all env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
 
+VENV = .venv
+PYTHON = $(VENV)/bin/python
+PIP = $(VENV)/bin/pip
+DBT = $(VENV)/bin/dbt
 
 # Determine OS for activate script
 ifeq ($(OS),Windows_NT)
@@ -162,5 +166,6 @@ cloud-pipeline:  ## Run pipeline directly in cloud mode (requires GCP credential
 	STORAGE_BACKEND=gcs DBT_TARGET=prod $(PYTHON) scripts/run_ingestion.py; \
 	DBT_TARGET=prod $(DBT) run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR); \
 	DBT_TARGET=prod $(DBT) test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
+
 
 cloud-destroy: terraform-destroy  ## Destroy all GCP resources
