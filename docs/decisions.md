@@ -36,6 +36,14 @@
 * Maintains manual Makefile targets for development and cloud execution
 * LocalExecutor with PostgreSQL backend for simplicity
 
+## Cloud Orchestration with Airflow on Compute Engine VM
+
+* Use self-managed Airflow on Compute Engine VM instead of Cloud Composer
+* Lower cost for small-scale pipeline
+* Full control over environment
+* Terraform-provisioned VM with startup script for Docker and repository setup
+* Airflow DAG scheduled every 30 minutes for cloud pipeline
+
 ## Append-Only Strategy
 
 * Preserves history
@@ -51,6 +59,8 @@
 
 * Reproducibility
 * Version control for infra
+
+
 
 ## Minimal Monitoring
 

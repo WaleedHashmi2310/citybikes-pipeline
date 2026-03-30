@@ -1,248 +1,346 @@
-# CityBikes Data Pipeline
+# 🚲 CityBikes ELT Pipeline – Compare Bike Sharing Across German Cities
 
-End-to-end data pipeline for CityBikes API.
+**An end-to-end data pipeline that extracts, loads, and transforms real‑time bike‑sharing data from 12 major German cities. Run locally with DuckDB or deploy to Google Cloud with BigQuery. Perfect for learning modern data engineering or monitoring urban mobility trends.**
 
-## Overview
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://python.org)
+[![dbt](https://img.shields.io/badge/dbt-✓-FF694B.svg)](https://docs.getdbt.com/)
+[![Apache Airflow](https://img.shields.io/badge/Airflow-✓-007A88.svg)](https://airflow.apache.org/)
+[![Terraform](https://img.shields.io/badge/Terraform-✓-7B42BC.svg)](https://terraform.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This project implements a robust data pipeline that ingests, stores, transforms, and visualizes data from the CityBikes API. It supports both local development (DuckDB) and cloud deployment (BigQuery).
+## 📖 What’s This About?
 
-## Architecture
+City‑bike systems in Germany are booming, but **how do their utilization patterns differ?** Do Hamburg’s stations fill up faster than Berlin’s? Is Munich more active on weekends than Frankfurt? This pipeline answers those questions by:
 
-- **Ingestion**: Python modules for API interaction with retry logic and schema validation
-- **Storage**: Abstract storage layer supporting local Parquet files and Google Cloud Storage
-- **Warehouse**: DuckDB for local development, BigQuery for cloud production
-- **Transformations**: dbt models for data cleaning and aggregation
-- **Execution**: Manual pipeline execution via Makefile targets or scheduled via Apache Airflow (local)
-- **Infrastructure**: Terraform for cloud resource provisioning
-- **CI/CD**: GitHub Actions for automated testing and deployment
+1. **Ingesting** live station data every 30 minutes from the [CityBikes API](https://api.citybik.es/v2/) for 12 major German networks.
+2. **Storing** the data in a partitioned, append‑only format (local Parquet or Google Cloud Storage).
+3. **Transforming** raw records into clean, analyzable tables using **dbt**.
+4. **Producing** ready‑to‑use **data marts** that compare cities, rank stations, and track hourly/weekly trends.
+5. **Orchestrating** the entire flow with **Apache Airflow**—locally via Docker or in the cloud on a GCP Compute Engine VM.
 
-## Project Structure
+### 🎯 What You’ll Get Out of It
 
-See [docs/structure.md](docs/structure.md) for details.
+* **City‑level comparison**: Daily total stations, average utilization, free‑bike ratios across Berlin, Hamburg, Munich, Cologne, Frankfurt, Stuttgart, Leipzig, Dresden, Düsseldorf, Mainz.
+* **Hourly trends**: See how usage peaks during rush hours in each city.
+* **Station ranking**: Identify the most‑ and least‑used stations in each network.
+* **Weekly patterns**: Compare weekday vs. weekend activity.
+* **A fully‑functional ELT pipeline** that you can extend, customize, or deploy as a production monitoring tool.
 
-## Getting Started
+---
 
-### Prerequisites
+## 🛠️ Prerequisites
 
-- Python 3.12+
-- Git
+**For local mode (DuckDB)**
+*   **Python 3.12+** – the project uses modern Python features.
+*   **Git** – to clone the repository.
+*   **Docker & Docker Compose** – to run Airflow locally (optional; you can also run the pipeline manually).
 
-### Installation
+**For cloud mode (BigQuery / GCS)**
+*   Everything above, plus:
+*   **Google Cloud Platform account** – with a project where you can create resources (free tier eligible).
+*   **gcloud CLI** – authenticated with `gcloud auth application-default login` or a service‑account key.
+*   **Terraform ≥1.5** – to provision the cloud infrastructure.
 
-1. Clone the repository
-2. Create virtual environment: `python -m venv .venv`
-3. Activate virtual environment: `source .venv/bin/activate`
-4. Install dependencies: `pip install -e .`
+**All dependencies are managed inside a Python virtual environment; you never need to install packages globally.**
 
-**Alternative using Makefile:**
+---
+
+## 🏗️ Architecture at a Glance
+
+The pipeline is built as a **dual‑mode ELT system**: the same code runs either locally (with DuckDB and local Parquet files) or in the cloud (with BigQuery and Google Cloud Storage). Orchestration is handled by Apache Airflow, scheduled every 30 minutes.
+
+![Pipeline Architecture](docs/architecture-diagram.svg)
+
+### 🔄 Data Flow
+
+1.  **Extract** – Python client calls the CityBikes API, validates responses with Pydantic schemas, and adds ingestion timestamps.
+2.  **Load** – Abstract storage layer writes partitioned Parquet files to either the local filesystem (`data/raw/date=.../city=...`) or a GCS bucket.
+3.  **Transform** – dbt models turn raw data into **staging** (cleaned, typed) and **mart** tables (business‑level aggregates).
+4.  **Orchestrate** – Airflow DAGs glue the steps together and run on schedule.
+5.  **Visualize** (optional) – Connect Looker Studio to the BigQuery marts for live dashboards.
+
+### 📦 Key Technologies
+
+| Layer           | Local Stack              | Cloud Stack               |
+|-----------------|--------------------------|---------------------------|
+| **Storage**     | Parquet on disk          | Google Cloud Storage      |
+| **Warehouse**   | DuckDB                   | BigQuery                  |
+| **Orchestrator**| Airflow (Docker Compose) | Airflow (GCP Compute VM)  |
+| **Infra as Code**| –                        | Terraform                 |
+
+---
+
+## 🚀 Let’s Get Started
+
+Choose your path: **local mode** for quick experimentation, or **cloud mode** for a production‑like deployment. Both follow the same three‑step pattern:
+
+1.  **Dry run** – execute the pipeline once manually.
+2.  **Historical load** – generate realistic time‑series data for testing.
+3.  **Orchestration** – schedule the pipeline to run automatically every 30 minutes.
+
+---
+
+## 🖥️ Local Mode (DuckDB + Parquet)
+
+Run the entire pipeline on your laptop with **zero cloud dependencies**. Data is stored as Parquet files and transformed in a local DuckDB database.
+
+### 📦 Step 0: Clone & Setup
+
 ```bash
-make setup  # Creates virtual environment and installs dependencies
-```
+# 1. Clone the repository
+git clone https://github.com/yourusername/citybikes-pipeline.git
+cd citybikes-pipeline
 
-### Environment Variables
-
-1. Copy the environment template: `cp .env.example .env` (or use `make env-setup`)
-2. Edit `.env` with your configuration:
-   - For local development with DuckDB: Set `DBT_DUCKDB_PATH` (default: `citybikes.duckdb`)
-   - For cloud deployment with BigQuery/GCS: Set all BigQuery and Google Cloud variables
-3. Load environment variables into your shell:
-   ```bash
-   export $(grep -v '^#' .env | xargs)
-   ```
-   Or use a tool like `direnv` or `dotenv`.
-
-See [.env.example](.env.example) for detailed variable descriptions.
-
-### Quick Start with Makefile
-
-The project includes a comprehensive Makefile for common tasks:
-
-```bash
-# Show all available commands
-make help
-
-# Set up environment and install dependencies
+# 2. Set up Python environment and install dependencies
 make setup
 
-# Copy environment template and configure
+# 3. Copy environment template (no changes needed for local DuckDB)
 make env-setup
-# Edit .env file with your configuration
-
-# Run full local pipeline: ingestion → dbt → data tests
-make pipeline
-
-# Individual steps
-make ingest-local           # Extract data and store as Parquet files
-make dbt-run               # Run dbt transformations
-make dbt-test              # Run data quality tests
-make test                  # Run unit tests
-make historical-load       # Generate historical data with time patterns
 ```
 
-### Simplified Workflow
+That’s it! The `.env` file already contains the default `DBT_DUCKDB_PATH=citybikes.duckdb`. The virtual environment (`.venv`) is ready.
 
-For streamlined deployment, use these high-level targets:
+### 🧪 Step 1: Dry Run – Execute the Pipeline Once
+
+Run the full ELT cycle **once** to verify everything works:
 
 ```bash
-# Local development: Set up environment and run full pipeline
-make local
-
-# Cloud deployment: Provision GCP resources and configure environment
-make cloud
-
-# Run pipeline directly in cloud mode (after cloud setup)
-make cloud-pipeline
-
-# Destroy all GCP resources
-make cloud-destroy
+make pipeline
 ```
 
-### Local Orchestration with Apache Airflow
+What happens under the hood:
+1.  `make ingest-local` – fetches current station data from all 12 German networks and writes partitioned Parquet files to `data/raw/date=.../city=...`.
+2.  `make dbt-run` – runs dbt models that create staging tables (cleaned raw data) and five data marts in `citybikes.duckdb`.
+3.  `make dbt-test` – executes data quality tests (e.g., non‑negative free_bikes, valid timestamps).
 
-For scheduled local orchestration, you can run the pipeline using Apache Airflow in Docker containers:
+**Check the results:**
+```bash
+# Inspect the raw Parquet files
+ls -la data/raw/*/*/*.parquet
+
+# Query the DuckDB database (requires duckdb CLI)
+duckdb citybikes.duckdb \
+  "SELECT city, COUNT(*) AS stations FROM stg_stations GROUP BY city;"
+```
+
+### 📅 Step 2: Historical Load – Generate Time‑Series Test Data
+
+The CityBikes API only returns current snapshots. To test time‑series aggregations, generate synthetic historical data that mimics real usage patterns:
+
+```bash
+# Generate 7 days of data with 30‑minute intervals (default)
+make historical-load
+
+# Customize: 3 days, hourly intervals, only Berlin & Hamburg
+make historical-load HISTORICAL_DAYS_BACK=3 HISTORICAL_INTERVAL_MINUTES=60 NETWORKS="callabike-berlin,stadtrad-hamburg-db"
+```
+
+The script creates realistic timestamps, simulates daily/weekly cycles, and writes Parquet files with the same partition structure as live ingestion. All generated records include a `_generated = true` flag so you can distinguish them from real API data.
+
+### ⏰ Step 3: Orchestration – Schedule with Airflow (Optional)
+
+To run the pipeline automatically every 30 minutes, start the local Airflow stack (Docker Compose):
 
 ```bash
 # Start Airflow (PostgreSQL + LocalExecutor)
 make airflow-up
+```
 
-# Stop Airflow
+Wait a minute for containers to initialize, then open **http://localhost:8080** (login: `admin` / `admin`). You’ll see the DAG `citybikes_pipeline` already enabled and scheduled.
+
+**What’s inside the Airflow setup:**
+*   The project directory is mounted as a volume – code changes are reflected immediately.
+*   Raw data lands in `data/raw` (same as manual runs).
+*   DuckDB database is at `citybikes.duckdb` (same as manual runs).
+*   DAG runs every 30 minutes, executing `ingest_local` → `dbt_run` → `dbt_test`.
+
+**Useful commands:**
+```bash
+# Stop Airflow (keeps volumes)
 make airflow-down
 
-# Reset Airflow (stop and wipe volumes)
+# Stop and wipe all Airflow data (reset)
 make airflow-reset
 ```
 
-Access the Airflow UI at http://localhost:8080 (admin/admin) to monitor DAG runs and logs.
-
-The Airflow setup mounts the project directory as a volume, so code changes are reflected without rebuilding the image. Raw data is stored in `data/raw` and the DuckDB database in `citybikes.duckdb`.
-
-The DAG `citybikes_pipeline` runs every 30 minutes, executing ingestion (local storage), dbt run, and dbt test tasks.
-
-### Historical Data Generation
-
-Generate realistic historical station data for testing time-series analytics:
+### 🧹 Clean Up Local Environment
 
 ```bash
-# Generate data for last 7 days with 30-minute intervals
-make historical-load
-
-# Custom parameters via environment variables
-make historical-load HISTORICAL_DAYS_BACK=3 HISTORICAL_INTERVAL_MINUTES=60
-
-# Direct script usage
-python scripts/historical_load.py --days-back 3 --interval-minutes 120 --networks "callabike-berlin,stadtrad-hamburg-db" --storage local
+# Remove virtual environment, DuckDB file, raw data, and dbt artifacts
+make clean
 ```
 
-### Manual Usage
+---
 
-You can also run the ingestion script directly:
+## ☁️ Cloud Mode (BigQuery + Google Cloud Storage)
+
+Deploy the pipeline to Google Cloud for a production‑ready setup. Data flows from the API → GCS bucket → BigQuery external table → dbt transformations → BigQuery marts.
+
+### ⚙️ Step 0: Prerequisites & Authentication
+
+1.  **Google Cloud Project** – create one in the [Cloud Console](https://console.cloud.google.com).
+2.  **Enable APIs** – BigQuery, Cloud Storage, IAM, Compute Engine (if using VM orchestration).
+3.  **Install & authenticate gcloud CLI**:
+    ```bash
+    gcloud auth application-default login
+    # OR use a service account key (see Terraform step below)
+    ```
+4.  **Install Terraform** (≥1.5) – [instructions](https://developer.hashicorp.com/terraform/install).
+
+### 🏗️ Step 1: Provision Cloud Infrastructure with Terraform
+
+The repository includes a Terraform module that creates a GCS bucket, BigQuery dataset, IAM service account, and (optionally) a Compute Engine VM for Airflow.
 
 ```bash
-# Basic ingestion with default German cities
-python scripts/run_ingestion.py --storage local
+# 1. Navigate to terraform directory and copy the variables template
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
 
-# Custom network list
-python scripts/run_ingestion.py --networks "callabike-frankfurt,stadtrad-hamburg-db"
+# 2. Edit terraform.tfvars – fill in your GCP project ID and region
+#    (leave other values as defaults unless you need to customize)
 
-# GCS storage (requires GCS_BUCKET_NAME in .env)
-python scripts/run_ingestion.py --storage gcs --bucket your-bucket-name
-
-# See all options
-python scripts/run_ingestion.py --help
+# 3. Initialize Terraform and apply the configuration
+make terraform-init    # from project root
+make terraform-plan
+make terraform-apply   # confirms creation of bucket, dataset, service account, VM
 ```
 
+After `terraform apply`, note the outputs: bucket name, dataset ID, service account email, and VM IP (if you opted for the VM module).
 
-### Cloud Deployment Options
+### 🔑 Step 2: Configure Environment for Cloud Execution
 
-For production deployment on Google Cloud Platform, several cost-effective options are available. The `make cloud` command automates infrastructure provisioning (GCS bucket, BigQuery dataset, IAM service account) and environment configuration, but does not deploy an orchestrator. Choose one of these deployment patterns:
-
-#### Option 1: Compute Engine VM (Manual Setup)
-Deploy the pipeline to a small Compute Engine instance and run it manually or via cron:
-- **Cost**: ~$15/month for e2-micro instance
-- **Setup**: Manual VM creation, install dependencies, clone repository
-- **Management**: Manual updates, automatic startup on boot
-- **Execution**: Run `make cloud-pipeline` manually or schedule via cron
-
-#### Option 2: Cloud Run Jobs + Cloud Scheduler
-Convert pipeline tasks to individual Cloud Run Jobs triggered by Cloud Scheduler:
-- **Cost**: Pay-per-use, scales to zero
-- **Setup**: Containerize each task (ingestion, dbt run, dbt test)
-- **Management**: Serverless, no infrastructure to manage
-
-#### Option 3: GKE Autopilot (Kubernetes)
-Run pipeline on managed Kubernetes using Kubernetes Jobs or an orchestrator like Argo Workflows:
-- **Cost**: ~$50-100/month depending on usage
-- **Setup**: Deploy pipeline containers to GKE Autopilot
-- **Management**: Google-managed Kubernetes nodes
-- **Execution**: Schedule via Kubernetes CronJobs or workflow orchestrator
-
-#### Common Prerequisites for All Options:
+Two helper scripts automate the setup of your `.env` file:
 
 ```bash
-# Generate environment variables from Terraform outputs and update .env file
+# Update .env with GCS bucket name, BigQuery dataset, project ID, etc.
 python scripts/generate_gcp_env.py --format dotenv --update-env
 
-# Create service account key for GCP authentication (updates .env automatically)
+# Create a service‑account key file and update DBT_BIGQUERY_KEYFILE in .env
 python scripts/create_service_account_key.py
-
-# Set environment variables for cloud execution
-export STORAGE_BACKEND=gcs
-export DBT_TARGET=prod
-source .env  # or use export $(grep -v '^#' .env | xargs)
 ```
 
-#### Manual VM Setup (Option 1):
-If you choose Option 1, follow these general steps:
+Now your `.env` contains all the required cloud variables (`GCS_BUCKET_NAME`, `DBT_BIGQUERY_PROJECT`, `DBT_BIGQUERY_DATASET`, `DBT_BIGQUERY_KEYFILE`, …).
 
-1. **Create a Compute Engine VM** with desired specifications (e2-micro recommended)
-2. **Install dependencies**: Docker, docker-compose, Python, git
-3. **Clone repository** and copy pipeline code to VM
-4. **Copy service account key** and `.env` file to VM
-5. **Run pipeline manually**: `make cloud-pipeline` or schedule via cron
+### 🧪 Step 3: Dry Run – Execute the Cloud Pipeline Once
 
-For Options 2 and 3, refer to separate deployment guides (to be implemented).
-
-### Cloud Infrastructure with Terraform
-
-Cloud resources (GCS bucket, BigQuery dataset, IAM service account) are managed via Terraform. The `make cloud` command automates the entire provisioning process:
+With infrastructure ready, run the full cloud pipeline manually:
 
 ```bash
-# Initialize Terraform
-make terraform-init
-
-# Generate execution plan (requires terraform.tfvars)
-make terraform-plan
-
-# Apply infrastructure changes (requires GCP credentials)
-make terraform-apply
-
-# Show output values (bucket name, dataset ID, service account email)
-make terraform-output
-
-# Format and validate configuration
-make terraform-fmt
-make terraform-validate
+make cloud-pipeline
 ```
 
-**Setup steps:**
+What happens:
+1.  `STORAGE_BACKEND=gcs` – ingestion writes Parquet files directly to your GCS bucket.
+2.  `DBT_TARGET=prod` – dbt uses the BigQuery profile and materializes models in BigQuery.
+3.  The same five data marts are built in BigQuery, ready for analysis.
 
-1. **Create `terraform.tfvars`**: Copy `terraform/terraform.tfvars.example` to `terraform/terraform.tfvars` and fill in your GCP project details.
-2. **Configure credentials**: Set `GOOGLE_APPLICATION_CREDENTIALS` environment variable or use `gcloud auth application-default login`.
-3. **Apply infrastructure**: Run `make terraform-apply` to create resources.
-4. **Configure environment**: Use the automation scripts to update `.env` with Terraform outputs and create service account key:
-   ```bash
-   # Update .env with GCS bucket, BigQuery dataset, and project
-   python scripts/generate_gcp_env.py --format dotenv --update-env
-   # Create service account key and update .env with key file path
-   python scripts/create_service_account_key.py
-   ```
+**Verify in BigQuery:**
+*   Go to [BigQuery Console](https://console.cloud.google.com/bigquery).
+*   You’ll see a dataset named `citybikes` (or whatever you configured) with tables `stg_stations`, `mart_station_utilization`, `mart_city_hourly_trends`, etc.
 
-See [terraform/README.md](terraform/README.md) for detailed Terraform module documentation.
+### 📅 Step 4: Historical Load – Generate Cloud Test Data
 
-### Development
+Generate historical Parquet files and upload them to GCS:
 
-Follow the phased implementation approach outlined in [CLAUDE.md](CLAUDE.md).
+```bash
+# Generate 7 days of data and store directly in GCS
+make historical-load STORAGE_BACKEND=gcs GCS_BUCKET_NAME=$(grep GCS_BUCKET_NAME .env | cut -d= -f2)
 
-## License
+# Customize days, interval, networks
+make historical-load HISTORICAL_DAYS_BACK=3 HISTORICAL_INTERVAL_MINUTES=120 NETWORKS="callabike-berlin,stadtrad-hamburg-db" STORAGE_BACKEND=gcs
+```
 
-MIT
+The script uses the same GCS storage backend as live ingestion, so the generated files land in the same bucket partition structure.
+
+
+### ⏰ Step 5: Orchestration – Airflow on a GCP Compute Engine VM
+
+If you used the Terraform `compute` module, a VM with Docker and the repository cloned is waiting for you. However, Airflow containers are not automatically started. Follow these steps to deploy Airflow and schedule the pipeline:
+
+**Prepare the VM:**
+1.  Note the VM external IP from Terraform outputs.
+2.  Copy your local `.env` file to the VM (required for environment variables):
+    ```bash
+    gcloud compute scp .env citybikes-airflow-vm:/opt/citybikes-pipeline/.env
+    ```
+3.  SSH into the VM and start Airflow:
+    ```bash
+    gcloud compute ssh citybikes-airflow-vm
+    cd /opt/citybikes-pipeline
+    make airflow-up
+    ```
+    Wait 2–3 minutes for the containers to initialize.
+
+**Access the cloud Airflow UI:**
+1.  Open `http://<VM_IP>:8080` (login: `admin` / `admin`).
+2.  The DAG `citybikes_cloud_pipeline` is already scheduled and will run every 30 minutes.
+
+**What’s inside the VM setup:**
+*   Docker and docker‑compose installed via startup script.
+*   Repository cloned into `/opt/citybikes-pipeline`.
+*   Firewall rules allow inbound traffic on ports 8080 (Airflow UI) and 22 (SSH).
+*   The attached service account provides permissions to access GCS and BigQuery (no key file needed).
+
+**Manual triggering from your local machine (optional):**
+```bash
+# Run the cloud pipeline remotely via SSH
+gcloud compute ssh citybikes-airflow-vm --command "cd /opt/citybikes-pipeline && make cloud-pipeline"
+```
+### 🗑️ Step 6: Destroy Cloud Resources (When Done)
+
+To avoid ongoing costs, tear down all created resources:
+
+```bash
+make cloud-destroy   # runs terraform destroy -auto-approve
+```
+
+**Warning:** This deletes the GCS bucket (and all data inside), BigQuery dataset, service account, and VM. Only run when you no longer need the pipeline.
+
+---
+
+## 🛠️ Makefile Cheat Sheet
+
+The project’s `Makefile` is your Swiss‑army knife. Run `make help` to see all targets.
+
+| Target | Description |
+|--------|-------------|
+| `make setup` | Create virtual environment and install all dependencies. |
+| `make pipeline` | Local dry‑run: ingest → dbt run → dbt test. |
+| `make ingest-local` | Fetch live data and store as local Parquet. |
+| `make ingest-networks NETWORKS="..."` | Ingest only specific networks. |
+| `make dbt-run` | Run dbt transformations (uses current target). |
+| `make dbt-test` | Run dbt data quality tests. |
+| `make historical-load` | Generate historical test data (local). |
+| `make airflow-up` | Start local Airflow stack (Docker). |
+| `make cloud` | Provision GCP infrastructure + configure `.env`. |
+| `make cloud-pipeline` | Run full pipeline in cloud mode. |
+| `make cloud-destroy` | Destroy all GCP resources. |
+| `make test` | Run unit tests (pytest). |
+| `make lint` | Lint Python code (flake8). |
+| `make format` | Format code with black/isort. |
+| `make clean` | Remove virtual env, data, DuckDB file, dbt artifacts. |
+
+---
+
+## 📚 Documentation
+
+*   **[docs/architecture.md](docs/architecture.md)** – detailed architecture and data flow.
+*   **[docs/structure.md](docs/structure.md)** – complete repository layout.
+*   **[docs/progress.md](docs/progress.md)** – project phase completion status.
+*   **[docs/decisions.md](docs/decisions.md)** – architectural decision records (ADRs).
+*   **[CLAUDE.md](CLAUDE.md)** – development rules and phase order.
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## 🙏 Acknowledgements
+
+*   Data provided by the [CityBikes API](https://api.citybik.es/v2/).
+*   Built with [Python](https://python.org), [dbt](https://docs.getdbt.com/), [Apache Airflow](https://airflow.apache.org/), [DuckDB](https://duckdb.org/), [BigQuery](https://cloud.google.com/bigquery), [Terraform](https://terraform.io).
+*   Inspired by the need to compare urban bike‑sharing systems across Germany.
+

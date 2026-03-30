@@ -16,6 +16,8 @@ Orchestration: manual (`make pipeline`) or automated (Airflow DAG scheduled ever
 
 API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
 
+Orchestration: Airflow DAG on GCP Compute Engine VM (scheduled every 30 minutes)
+
 ## Components
 
 ### 1. Ingestion Layer
@@ -56,6 +58,12 @@ API → Python Ingestion → GCS → BigQuery → dbt → Marts → Looker
   * DAG scheduled every 30 minutes (`citybikes_pipeline`)
   * Tasks: ingest_local (STORAGE_BACKEND=local) → dbt_run → dbt_test
   * Make targets: `airflow-up`, `airflow-down`, `airflow-reset`
+
+* **Cloud orchestration**: Airflow deployed on GCP Compute Engine VM:
+
+  * Terraform-provisioned VM with Docker and startup script
+  * Airflow DAG (`citybikes_cloud_pipeline`) scheduled every 30 minutes
+  * Tasks: ingest_gcs (STORAGE_BACKEND=gcs) → dbt_run → dbt_test
 
 ### 6. Visualization
 

@@ -50,13 +50,10 @@
 * [x] Cloud ingestion test (Frankfurt stations → GCS)
 * [x] dbt transformations on BigQuery (europe-west1)
 * [x] Data tests (9/10 passing, 1 type mismatch accepted_values)
+* [x] Cloud orchestration (Airflow on GCP Compute Engine VM)
+* [x] Cloud pipeline DAG (citybikes_cloud_pipeline.py)
 
-## Phase 6: CI/CD
 
-* [ ] GitHub Actions
-* [ ] pytest runs
-* [ ] dbt build runs
-
-## Phase 7: Dashboard
+## Phase 6: Dashboard
 
 * [ ] Looker dashboard created
