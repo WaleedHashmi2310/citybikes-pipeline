@@ -47,9 +47,8 @@ setup:  ## Set up Python virtual environment and install all dependencies for pi
 	python3.12 -m venv $(VENV)
 	$(PIP) install --upgrade pip setuptools wheel
 	$(PIP) install -e ".[storage,dbt,dev]"
-	$(MAKE) env-setup
 
-install: setup  ## Install the package in development mode (alias for setup)
+install: setup env-setup check-env## Install the package in development mode (alias for setup)
 
 test:  ## Run unit tests with pytest
 	$(PYTHON) -m pytest tests/ -v --cov=ingestion --cov=storage --cov-report=term-missing
