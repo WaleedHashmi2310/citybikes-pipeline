@@ -141,8 +141,7 @@ dmypy.json
 Thumbs.db
 
 # Data
-data/raw/**
-!data/raw/
+data/raw/*
 !data/raw/.gitkeep
 
 # DuckDB database files

@@ -38,6 +38,8 @@ setup:  ## Set up Python virtual environment and install all dependencies for pi
 	python3.12 -m venv $(VENV)
 	$(PIP) install --upgrade pip setuptools wheel
 	$(PIP) install -e ".[storage,dbt,dev]"
+	cp .env.example .env
+	@echo "Virtual environment created and dependencies installed. Please edit .env file with your configuration."
 
 install: setup  ## Install the package in development mode (alias for setup)
 
