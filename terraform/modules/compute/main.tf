@@ -27,24 +27,49 @@ resource "google_compute_instance" "airflow_vm" {
     startup-script = <<-EOF
         #!/bin/bash
         set -e
+        exec > /var/log/startup-script.log 2>&1
+        echo "Startup script started at $(date)"
 
         # Install Docker
+        echo "Updating apt packages..."
         apt-get update
+        echo "Installing required tools..."
         apt-get install -y ca-certificates curl gnupg git make
+        echo "Setting up Docker repository..."
         install -m 0755 -d /etc/apt/keyrings
         curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
         chmod a+r /etc/apt/keyrings/docker.gpg
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
         apt-get update
+        echo "Installing Docker..."
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
         # Add current user to docker group
         CURRENT_USER=$(getent passwd 1000 | cut -d: -f1)
         usermod -aG docker $CURRENT_USER
 
-        # Clone repo
-        git clone https://github.com/WaleedHashmi2310/citybikes-pipeline.git /opt/citybikes-pipeline
-        chmod -R 777 /opt/citybikes-pipeline
+        # Clone repo with retries
+        echo "Cloning repository..."
+        MAX_RETRIES=3
+        RETRY_DELAY=10
+        for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES..."
+            if git clone https://github.com/WaleedHashmi2310/citybikes-pipeline.git /opt/citybikes-pipeline; then
+                echo "Repository cloned successfully."
+                break
+            else
+                echo "Git clone failed. Retrying in $RETRY_DELAY seconds..."
+                sleep $RETRY_DELAY
+            fi
+            if [ $i -eq $MAX_RETRIES ]; then
+                echo "ERROR: Failed to clone repository after $MAX_RETRIES attempts."
+                exit 1
+            fi
+        done
+
+        # Set permissions
+        chmod -R 755 /opt/citybikes-pipeline
+        echo "Startup script completed at $(date)"
     EOF
   }
 
