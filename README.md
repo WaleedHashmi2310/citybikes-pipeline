@@ -49,7 +49,7 @@ City‑bike systems in Germany are booming, but **how do their utilization patte
 
 The pipeline is built as a **dual‑mode ELT system**: the same code runs either locally (with DuckDB and local Parquet files) or in the cloud (with BigQuery and Google Cloud Storage). Orchestration is handled by Apache Airflow, scheduled every 30 minutes.
 
-![Pipeline Architecture](docs/architecture-diagram.svg)
+![Pipeline Architecture](docs/architecture-diagram.png)
 
 ### 🔄 Data Flow
 
