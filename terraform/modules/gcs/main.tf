@@ -4,6 +4,7 @@ resource "google_storage_bucket" "bucket" {
   location      = var.location
   project       = var.project_id
   storage_class = var.storage_class
+  
 
   # Enable uniform bucket-level access (recommended)
   uniform_bucket_level_access = true
@@ -29,4 +30,6 @@ resource "google_storage_bucket" "bucket" {
 
   # Labels for resource identification
   labels = var.labels
+
+  
 }

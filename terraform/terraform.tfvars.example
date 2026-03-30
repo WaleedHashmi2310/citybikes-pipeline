@@ -1,11 +1,9 @@
 # Example variable values for CityBikes pipeline infrastructure
 # Copy this file to terraform.tfvars and fill in your actual values
 
-project_id          = "your-gcp-project-id"
+project_id          = "your-gcp-project-id" #Required
 region              = "europe-west1"
-bucket_name         = "your-unique-bucket-name"
+bucket_name         = "your-unique-bucket-name" #Required
 dataset_id          = "citybikes"
 service_account_id  = "citybikes-pipeline-sa"
-environment         = "dev"
-
-# Note: VM orchestration removed. Pipeline runs manually or via external scheduler.
+environment         = "prod"

@@ -2,25 +2,11 @@
 # Author: Waleed Hashmi
 # Date: 2026-03-24
 
+-include .env
+export
+
 .PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean dbt-build historical-load all env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
 
-# Variables
-VENV = .venv
-PYTHON = $(VENV)/bin/python
-PIP = $(VENV)/bin/pip
-DBT = $(VENV)/bin/dbt
-PROJECT_NAME = citybikes-pipeline
-DBT_PROFILES_DIR = dbt/profiles
-DBT_PROJECT_DIR = dbt
-RAW_DATA_PATH = data/raw
-TERRAFORM_DIR = terraform
-NETWORKS ?= callabike-frankfurt,visa-frankfurt,callabike-koln,kvb-rad-koln,nextbike-dusseldorf,stadtrad-hamburg-db,callabike-munchen,stadtrad-stuttgart,mobibike-dresden,nextbike-leipzig,callabike-berlin,mvg-meinrad-nextbike-mainz
-
-# Historical data generation variables
-HISTORICAL_DAYS_BACK ?= 7
-HISTORICAL_INTERVAL_MINUTES ?= 30
-STORAGE_BACKEND ?= gcs
-GCS_BUCKET_NAME ?= citybikes-de-pipeline-raw
 
 # Determine OS for activate script
 ifeq ($(OS),Windows_NT)
