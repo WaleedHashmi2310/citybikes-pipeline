@@ -8,38 +8,49 @@
 [![Terraform](https://img.shields.io/badge/Terraform-✓-7B42BC.svg)](https://terraform.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📖 What’s This About?
+## 🏆 Project Highlights
 
-City‑bike systems in Germany are booming, but **how do their utilization patterns differ?** Do Hamburg’s stations fill up faster than Berlin’s? Is Munich more active on weekends than Frankfurt? This pipeline answers those questions by:
+- **Dual‑mode ELT pipeline**: Same code runs locally (DuckDB + Parquet) and in cloud (BigQuery + Google Cloud Storage) via abstract storage layer.
+- **Production orchestration**: Apache Airflow schedules pipeline every 30 minutes – locally via Docker Compose, in cloud via GCP Compute Engine VM.
+- **Infrastructure as Code**: Terraform automates provisioning of GCS bucket, BigQuery dataset, IAM service account, and optional VM.
+- **Data warehouse best practices**: BigQuery tables partitioned by `date` and `city` for optimal query performance; DuckDB for local development.
+- **Modern data stack**: Python 3.12 with Pydantic validation, dbt transformations, comprehensive data quality tests.
+- **Real‑world analytics**: Compare bike‑sharing utilization across 12 German cities, identify hourly/weekly trends, rank stations.
+- **Live Looker Studio dashboard**: Interactive visualization of city comparisons, hourly trends, station rankings, and weekly patterns.
+- **Complete reproducibility**: Step‑by‑step instructions, automated `Makefile` setup, virtual environment isolation.
 
-1. **Ingesting** live station data every 30 minutes from the [CityBikes API](https://api.citybik.es/v2/) for 12 major German networks.
-2. **Storing** the data in a partitioned, append‑only format (local Parquet or Google Cloud Storage).
-3. **Transforming** raw records into clean, analyzable tables using **dbt**.
-4. **Producing** ready‑to‑use **data marts** that compare cities, rank stations, and track hourly/weekly trends.
-5. **Orchestrating** the entire flow with **Apache Airflow**—locally via Docker or in the cloud on a GCP Compute Engine VM.
+## 📊 Looker Studio Dashboard
 
-### 🎯 What You’ll Get Out of It
+The pipeline data marts are visualized in a **live Looker Studio dashboard** that compares bike‑sharing utilization across German cities:
 
-* **City‑level comparison**: Daily total stations, average utilization, free‑bike ratios across Berlin, Hamburg, Munich, Cologne, Frankfurt, Stuttgart, Leipzig, Dresden, Düsseldorf, Mainz.
-* **Hourly trends**: See how usage peaks during rush hours in each city.
-* **Station ranking**: Identify the most‑ and least‑used stations in each network.
-* **Weekly patterns**: Compare weekday vs. weekend activity.
-* **A fully‑functional ELT pipeline** that you can extend, customize, or deploy as a production monitoring tool.
+![Dashboard Snapshot](docs/dashboard_snapshot.png)
+
+**🔗 Live dashboard:** https://lookerstudio.google.com/reporting/83f8240b-7981-4292-8dde-1cc530d71407
+
+The dashboard connects directly to the BigQuery data marts (cloud mode) and updates every 30 minutes as the pipeline runs.
+
+## 📖 Overview
+
+This pipeline compares bike‑sharing utilization across 12 major German cities by ingesting live station data every 30 minutes from the [CityBikes API](https://api.citybik.es/v2/), storing partitioned Parquet files (local or GCS), transforming with dbt into analyzable data marts, and orchestrating with Apache Airflow.
+
+**What you’ll get:**
+
+* **City‑level comparison**: Daily stations, average utilization, free‑bike ratios across Berlin, Hamburg, Munich, Cologne, Frankfurt, Stuttgart, Leipzig, Dresden, Düsseldorf, Mainz.
+* **Hourly trends**: Usage peaks during rush hours in each city.
+* **Station ranking**: Most‑ and least‑used stations in each network.
+* **Weekly patterns**: Weekday vs. weekend activity.
+* **Fully‑functional ELT pipeline** that can be extended, customized, or deployed as a production monitoring tool.
 
 ---
 
 ## 🛠️ Prerequisites
 
-**For local mode (DuckDB)**
-*   **Python 3.12+** – the project uses modern Python features.
-*   **Git** – to clone the repository.
-*   **Docker & Docker Compose** – to run Airflow locally (optional; you can also run the pipeline manually).
-
-**For cloud mode (BigQuery / GCS)**
-*   Everything above, plus:
-*   **Google Cloud Platform account** – with a project where you can create resources (free tier eligible).
-*   **gcloud CLI** – authenticated with `gcloud auth application-default login` or a service‑account key.
-*   **Terraform ≥1.5** – to provision the cloud infrastructure.
+| Local Mode (DuckDB) | Cloud Mode (BigQuery / GCS) |
+|---------------------|---------------------------|
+| Python 3.12+        | Everything in local mode, plus: |
+| Git                 | Google Cloud Platform account |
+| Docker & Docker Compose (optional) | `gcloud` CLI authenticated |
+|                     | Terraform ≥1.5 |
 
 **All dependencies are managed inside a Python virtual environment; you never need to install packages globally.**
 
@@ -82,54 +93,28 @@ Choose your path: **local mode** for quick experimentation, or **cloud mode** fo
 
 ## 🖥️ Local Mode (DuckDB + Parquet)
 
-Run the entire pipeline on your laptop with **zero cloud dependencies**. Data is stored as Parquet files and transformed in a local DuckDB database.
+Run the pipeline locally with zero cloud dependencies.
 
-### 📦 Step 0: Clone & Setup
-
+### Step 0: Clone & Setup
 ```bash
-# 1. Clone the repository
 git clone https://github.com/yourusername/citybikes-pipeline.git
 cd citybikes-pipeline
-
-# 2. Set up Python environment and install dependencies
-make setup
-
-# 3. Copy environment template (no changes needed for local DuckDB)
-make env-setup
+make setup        # creates virtual environment, installs dependencies
+make env-setup    # copies .env template (already configured for DuckDB)
 ```
 
-That’s it! The `.env` file already contains the default `DBT_DUCKDB_PATH=citybikes.duckdb`. The virtual environment (`.venv`) is ready.
-
-### 🧪 Step 1: Dry Run – Execute the Pipeline Once
-
-Run the full ELT cycle **once** to verify everything works:
-
+### Step 1: Dry Run – Execute Pipeline Once
 ```bash
-make pipeline
+make pipeline     # runs: ingest‑local → dbt‑run → dbt‑test
 ```
-
-What happens under the hood:
-1.  `make ingest-local` – fetches current station data from all 12 German networks and writes partitioned Parquet files to `data/raw/date=.../city=...`.
-2.  `make dbt-run` – runs dbt models that create staging tables (cleaned raw data) and five data marts in `citybikes.duckdb`.
-3.  `make dbt-test` – executes data quality tests (e.g., non‑negative free_bikes, valid timestamps).
-
-**Check the results:**
+Check results:
 ```bash
-# Inspect the raw Parquet files
 ls -la data/raw/*/*/*.parquet
-
-# Query the DuckDB database (requires duckdb CLI)
-duckdb citybikes.duckdb \
-  "SELECT city, COUNT(*) AS stations FROM stg_stations GROUP BY city;"
+duckdb citybikes.duckdb "SELECT city, COUNT(*) AS stations FROM stg_stations GROUP BY city;"
 ```
 
-### 📅 Step 2: Historical Load – Generate Time‑Series Test Data
-
-The CityBikes API only returns current snapshots. To test time‑series aggregations, generate synthetic historical data that mimics real usage patterns:
-
+### Step 2: Historical Load – Generate Test Data
 ```bash
-
-set .env/STORAGE_BACKEND ?= local # Options: local, gcs
 # Generate 7 days of data with 30‑minute intervals (default)
 make historical-load
 
@@ -137,39 +122,17 @@ make historical-load
 make historical-load HISTORICAL_DAYS_BACK=3 HISTORICAL_INTERVAL_MINUTES=60 NETWORKS="callabike-berlin,stadtrad-hamburg-db"
 ```
 
-The script creates realistic timestamps, simulates daily/weekly cycles, and writes Parquet files with the same partition structure as live ingestion. All generated records include a `_generated = true` flag so you can distinguish them from real API data.
-
-### ⏰ Step 3: Orchestration – Schedule with Airflow (Optional)
-
-To run the pipeline automatically every 30 minutes, start the local Airflow stack (Docker Compose):
-
+### Step 3: Orchestration – Schedule with Airflow (Optional)
 ```bash
-# Start Airflow (PostgreSQL + LocalExecutor)
-make airflow-up
+make airflow-up   # starts Airflow (PostgreSQL + LocalExecutor)
 ```
-
-Wait a minute for containers to initialize, then open **http://localhost:8080** (login: `admin` / `admin`). You’ll see the DAG `citybikes_pipeline` already enabled and scheduled.
-
-**What’s inside the Airflow setup:**
-*   The project directory is mounted as a volume – code changes are reflected immediately.
-*   Raw data lands in `data/raw` (same as manual runs).
-*   DuckDB database is at `citybikes.duckdb` (same as manual runs).
-*   DAG runs every 30 minutes, executing `ingest_local` → `dbt_run` → `dbt_test`.
+Open **http://localhost:8080** (admin/admin). DAG `citybikes_pipeline` runs every 30 minutes.
 
 **Useful commands:**
 ```bash
-# Stop Airflow (keeps volumes)
-make airflow-down
-
-# Stop and wipe all Airflow data (reset)
-make airflow-reset
-```
-
-### 🧹 Clean Up Local Environment
-
-```bash
-# Remove virtual environment, DuckDB file, raw data, and dbt artifacts
-make clean
+make airflow-down       # stop Airflow (keeps volumes)
+make airflow-reset      # stop and wipe all Airflow data
+make clean              # remove virtual env, DuckDB file, raw data, dbt artifacts
 ```
 
 ---

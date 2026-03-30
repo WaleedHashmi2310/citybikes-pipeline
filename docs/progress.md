@@ -56,4 +56,5 @@
 
 ## Phase 6: Dashboard
 
-* [ ] Looker dashboard created
+* [x] Looker dashboard created (live at https://lookerstudio.google.com/reporting/83f8240b-7981-4292-8dde-1cc530d71407)
+* [x] Dashboard snapshot added to docs/
