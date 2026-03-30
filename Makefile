@@ -170,12 +170,6 @@ cloud-pipeline:  ## Run pipeline directly in cloud mode (requires GCP credential
 		. ./.env; \
 		set +a; \
 	fi; \
-	if [ -f gcp.env ]; then \
-		echo "Sourcing gcp.env..."; \
-		set -a; \
-		. ./gcp.env; \
-		set +a; \
-	fi; \
 	export DBT_BIGQUERY_KEYFILE; \
 	export GOOGLE_APPLICATION_CREDENTIALS; \
 	@echo "Running cloud pipeline with STORAGE_BACKEND=gcs DBT_TARGET=prod..."; \
