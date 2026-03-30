@@ -1,5 +1,5 @@
 # CityBikes Pipeline Makefile
-# Author: Claude Code
+# Author: Waleed Hashmi
 # Date: 2026-03-24
 
 .PHONY: help setup install test lint format clean ingest ingest-local ingest-networks generate-sample-data dbt-run dbt-test pipeline dbt-docs dbt-clean dbt-build historical-load all env-setup check-env terraform-init terraform-plan terraform-apply terraform-destroy terraform-output terraform-fmt terraform-validate gcp-generate-env gcp-create-key local cloud cloud-destroy cloud-pipeline
@@ -33,13 +33,31 @@ help:  ## Show this help message
 	@echo "CityBikes Pipeline - Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+# Environment setup reminder
+env-setup:  ## Copy environment template and remind about configuration
+	@echo "Copying environment template..."
+	cp .env.example .env
+	@echo "\nPlease edit .env file with your configuration."
+	@echo "For local development with DuckDB, set DBT_DUCKDB_PATH (default: citybikes.duckdb)"
+	@echo "For cloud deployment, set BigQuery and GCS variables.\n"
+
+# Check environment
+check-env:  ## Check if required environment variables are set
+	@echo "Checking environment..."
+	@if [ -f ".env" ]; then \
+		echo ".env file exists."; \
+	else \
+		echo "WARNING: .env file not found. Run 'make env-setup' first."; \
+	fi
+	@echo "Current DBT_DUCKDB_PATH: $(DBT_DUCKDB_PATH)"
+
+
 setup:  ## Set up Python virtual environment and install all dependencies for pipeline
 	@echo "Setting up virtual environment using Python 3.12..."
 	python3.12 -m venv $(VENV)
 	$(PIP) install --upgrade pip setuptools wheel
 	$(PIP) install -e ".[storage,dbt,dev]"
-	cp .env.example .env
-	@echo "Virtual environment created and dependencies installed. Please edit .env file with your configuration."
+	$(MAKE) env-setup
 
 install: setup  ## Install the package in development mode (alias for setup)
 
@@ -129,10 +147,6 @@ terraform-validate:  ## Validate Terraform configuration
 # High-level orchestration targets
 local: setup pipeline  ## Set up local environment and run pipeline
 
-cloud: setup terraform-init terraform-apply gcp-create-key gcp-generate-env  ## Deploy to GCP: provision infrastructure (GCS, BigQuery, IAM)
-
-cloud-destroy: terraform-destroy  ## Destroy all GCP resources
-
 airflow-up:  ## Start Airflow locally
 	mkdir -p data/raw
 	chmod -R 777 data/
@@ -143,6 +157,10 @@ airflow-down:  ## Stop Airflow
 
 airflow-reset:  ## Stop Airflow and wipe volumes
 	cd airflow && docker compose down -v
+
+
+
+cloud: setup terraform-init terraform-apply gcp-create-key gcp-generate-env  ## Deploy to GCP: provision infrastructure (GCS, BigQuery, IAM)
 
 cloud-pipeline:  ## Run pipeline directly in cloud mode (requires GCP credentials set)
 	@echo "Loading environment variables..."; \
@@ -165,20 +183,4 @@ cloud-pipeline:  ## Run pipeline directly in cloud mode (requires GCP credential
 	DBT_TARGET=prod $(DBT) run --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR); \
 	DBT_TARGET=prod $(DBT) test --project-dir $(DBT_PROJECT_DIR) --profiles-dir $(DBT_PROFILES_DIR)
 
-# Environment setup reminder
-env-setup:  ## Copy environment template and remind about configuration
-	@echo "Copying environment template..."
-	cp .env.example .env
-	@echo "\nPlease edit .env file with your configuration."
-	@echo "For local development with DuckDB, set DBT_DUCKDB_PATH (default: citybikes.duckdb)"
-	@echo "For cloud deployment, set BigQuery and GCS variables.\n"
-
-# Check environment
-check-env:  ## Check if required environment variables are set
-	@echo "Checking environment..."
-	@if [ -f ".env" ]; then \
-		echo ".env file exists."; \
-	else \
-		echo "WARNING: .env file not found. Run 'make env-setup' first."; \
-	fi
-	@echo "Current DBT_DUCKDB_PATH: $(DBT_DUCKDB_PATH)"
+cloud-destroy: terraform-destroy  ## Destroy all GCP resources

@@ -60,8 +60,7 @@ def update_env_file(key_file, env_file=".env"):
 
     # Variables to update
     vars_to_update = {
-        "DBT_BIGQUERY_KEYFILE": key_file,
-        "GOOGLE_APPLICATION_CREDENTIALS": key_file
+        "DBT_BIGQUERY_KEYFILE": key_file
     }
 
     # Read existing .env file if it exists
