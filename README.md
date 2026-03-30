@@ -128,6 +128,8 @@ duckdb citybikes.duckdb \
 The CityBikes API only returns current snapshots. To test time‑series aggregations, generate synthetic historical data that mimics real usage patterns:
 
 ```bash
+
+set .env/STORAGE_BACKEND ?= local # Options: local, gcs
 # Generate 7 days of data with 30‑minute intervals (default)
 make historical-load
 
@@ -179,13 +181,37 @@ Deploy the pipeline to Google Cloud for a production‑ready setup. Data flows f
 ### ⚙️ Step 0: Prerequisites & Authentication
 
 1.  **Google Cloud Project** – create one in the [Cloud Console](https://console.cloud.google.com).
-2.  **Enable APIs** – BigQuery, Cloud Storage, IAM, Compute Engine (if using VM orchestration).
-3.  **Install & authenticate gcloud CLI**:
+
+2.  **Install & authenticate gcloud CLI, Enable APIs**:
     ```bash
-    gcloud auth application-default login
-    # OR use a service account key (see Terraform step below)
+    gcloud auth login
+    gcloud config set project YOUR_PROJECT_ID
+    gcloud services enable \
+    compute.googleapis.com \
+    bigquery.googleapis.com \
+    storage.googleapis.com \
+    iam.googleapis.com \
+    cloudresourcemanager.googleapis.com
     ```
-4.  **Install Terraform** (≥1.5) – [instructions](https://developer.hashicorp.com/terraform/install).
+3.  **In GCP Console → IAM & Admin → Service Accounts → Create:**
+- Name: `citybikes-terraform-sa`
+- Roles:
+  - `roles/compute.admin`
+  - `roles/iam.serviceAccountAdmin`
+  - `roles/iam.serviceAccountKeyAdmin`
+  - `roles/iam.serviceAccountUser`
+  - `roles/resourcemanager.projectIamAdmin`
+  - `roles/storage.admin`
+  - `roles/bigquery.admin`
+
+Download JSON key → save as `citybikes-pipeline/citybikes-terraform-sa-key.json`
+
+4. **Set env/GOOGLE_APPLICATION_CREDENTIALS**
+    ```
+    GOOGLE_APPLICATION_CREDENTIALS=path/to/citybikes-terraform-sa-key.json
+    ```
+
+5.  **Install Terraform** (≥1.5) – [instructions](https://developer.hashicorp.com/terraform/install).
 
 ### 🏗️ Step 1: Provision Cloud Infrastructure with Terraform
 
@@ -199,17 +225,18 @@ cp terraform.tfvars.example terraform.tfvars
 # 2. Edit terraform.tfvars – fill in your GCP project ID and region
 #    (leave other values as defaults unless you need to customize)
 
-# 3. Initialize Terraform and apply the configuration
-make terraform-init    # from project root
-make terraform-plan
-make terraform-apply   # confirms creation of bucket, dataset, service account, VM
+# 3. Return to project root and run the automated cloud setup
+cd ..
+make cloud
 ```
 
-After `terraform apply`, note the outputs: bucket name, dataset ID, service account email, and VM IP (if you opted for the VM module).
+After `make cloud` completes, note the outputs: bucket name, dataset ID, service account email, and VM IP (if you opted for the VM module).
 
-### 🔑 Step 2: Configure Environment for Cloud Execution
+### 🔑 Step 2: Verify Environment Configuration (Optional)
 
-Two helper scripts automate the setup of your `.env` file:
+The `make cloud` command already ran the helper scripts to configure your `.env` file. Verify that your `.env` contains the required cloud variables (`GCS_BUCKET_NAME`, `DBT_BIGQUERY_PROJECT`, `DBT_BIGQUERY_DATASET`, `DBT_BIGQUERY_KEYFILE`, …).
+
+If you need to re-run the configuration scripts manually:
 
 ```bash
 # Update .env with GCS bucket name, BigQuery dataset, project ID, etc.
@@ -218,8 +245,6 @@ python scripts/generate_gcp_env.py --format dotenv --update-env
 # Create a service‑account key file and update DBT_BIGQUERY_KEYFILE in .env
 python scripts/create_service_account_key.py
 ```
-
-Now your `.env` contains all the required cloud variables (`GCS_BUCKET_NAME`, `DBT_BIGQUERY_PROJECT`, `DBT_BIGQUERY_DATASET`, `DBT_BIGQUERY_KEYFILE`, …).
 
 ### 🧪 Step 3: Dry Run – Execute the Cloud Pipeline Once
 
@@ -259,15 +284,39 @@ If you used the Terraform `compute` module, a VM with Docker and the repository 
 
 **Prepare the VM:**
 1.  Note the VM external IP from Terraform outputs.
-2.  Copy your local `.env` file to the VM (required for environment variables):
+2.  Copy the `citybikes-pipeline-sa-key.json` to the VM.
     ```bash
-    gcloud compute scp .env citybikes-airflow-vm:/opt/citybikes-pipeline/.env
+    gcloud compute scp /path/to/citybikes-pipeline-sa-key.json \
+    citybikes-airflow-vm:/opt/citybikes-pipeline/ \
+    --zone=europe-west1-b \
+    --project=YOUR_PROJECT_ID
     ```
-3.  SSH into the VM and start Airflow:
+3.  Copy your local `.env` file to the VM (required for environment variables):
     ```bash
-    gcloud compute ssh citybikes-airflow-vm
-    cd /opt/citybikes-pipeline
-    make airflow-up
+    gcloud compute ssh citybikes-airflow-vm \
+    --zone=europe-west1-b \
+    --project=YOUR_PROJECT_ID
+    ```
+    ```bash
+    cat > /opt/citybikes-pipeline/.env << 'EOF'
+    DBT_BIGQUERY_PROJECT=your-gcp-project-id
+    DBT_BIGQUERY_DATASET=citybikes
+    DBT_BIGQUERY_LOCATION=europe-west1
+    DBT_TARGET=prod
+    GCS_BUCKET_NAME=your-bucket-name
+    SERVICE_ACCOUNT_EMAIL=citybikes-pipeline-sa@your-gcp-project-id.iam.gserviceaccount.com
+    EOF
+    ```
+    Add yourself to docker group:
+
+    ```bash
+    sudo usermod -aG docker $USER
+    newgrp docker
+    ```
+4.  Start Airflow:
+    ```bash
+    cd /opt/citybikes-pipeline/airflow
+    AIRFLOW_UID=$(id -u) docker compose up -d --build
     ```
     Wait 2–3 minutes for the containers to initialize.
 
