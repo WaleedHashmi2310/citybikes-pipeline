@@ -1,7 +1,7 @@
 """Data loader bridging extraction and storage."""
 
 import logging
-from typing import List, Tuple
+
 from ingestion.extractor import CityBikesExtractor
 from ingestion.schemas import NormalizedStation
 from storage.interface import StorageInterface
@@ -24,7 +24,7 @@ class DataLoader:
         self.storage = storage
         logger.debug("Initialized DataLoader")
 
-    def load_all_stations(self) -> Tuple[List[NormalizedStation], str]:
+    def load_all_stations(self) -> tuple[list[NormalizedStation], str]:
         """Extract all stations and store them.
 
         Returns:

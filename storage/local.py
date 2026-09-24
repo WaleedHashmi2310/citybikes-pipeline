@@ -1,14 +1,14 @@
 """Local Parquet storage implementation."""
 
+import itertools
 import json
 import logging
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
-import itertools
+
 import pandas as pd
+
 from ingestion.schemas import NormalizedStation
-from storage.interface import StorageInterface, StorageError
+from storage.interface import StorageError, StorageInterface
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class LocalStorage(StorageInterface):
         self.base_path = Path(base_path)
         logger.debug(f"Initialized LocalStorage with base path: {self.base_path}")
 
-    def store_stations(self, stations: List[NormalizedStation]) -> str:
+    def store_stations(self, stations: list[NormalizedStation]) -> str:
         """Store normalized stations as partitioned Parquet files.
 
         Args:
@@ -95,7 +95,7 @@ class LocalStorage(StorageInterface):
             logger.error(f"Failed to store stations locally: {e}")
             raise StorageError(f"Local storage failed: {e}") from e
 
-    def _stations_to_dataframe(self, stations: List[NormalizedStation]) -> pd.DataFrame:
+    def _stations_to_dataframe(self, stations: list[NormalizedStation]) -> pd.DataFrame:
         """Convert list of NormalizedStation to pandas DataFrame.
 
         Adds partition columns for date and city.

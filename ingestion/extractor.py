@@ -1,8 +1,12 @@
 """Data extraction from CityBikes API."""
 
 import logging
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
+from typing import ClassVar
+
+from pydantic import ValidationError
+from requests import RequestException
+
 from ingestion.client import CityBikesClient
 from ingestion.schemas import NetworkDetails, NormalizedStation
 
@@ -13,7 +17,7 @@ class CityBikesExtractor:
     """Extract and normalize station data from CityBikes API."""
 
     # Primary network IDs for target German cities (high volume networks)
-    GERMAN_NETWORK_IDS = [
+    GERMAN_NETWORK_IDS: ClassVar[list[str]] = [
         "callabike-frankfurt",  # Frankfurt
         "visa-frankfurt",  # Frankfurt (alternative, high volume)
         "callabike-koln",  # Cologne (Köln)
@@ -29,7 +33,7 @@ class CityBikesExtractor:
         # Koblenz not available in CityBikes API
     ]
 
-    def __init__(self, client: Optional[CityBikesClient] = None):
+    def __init__(self, client: CityBikesClient | None = None):
         """
         Initialize extractor.
 
@@ -38,7 +42,7 @@ class CityBikesExtractor:
         """
         self.client = client or CityBikesClient()
 
-    def extract_network_stations(self, network_id: str) -> List[NormalizedStation]:
+    def extract_network_stations(self, network_id: str) -> list[NormalizedStation]:
         """
         Extract and normalize stations for a single network.
 
@@ -57,7 +61,7 @@ class CityBikesExtractor:
         # Fetch network details
         network_details: NetworkDetails = self.client.get_network_details(network_id)
         city = network_details.location.city
-        ingestion_timestamp = datetime.now(timezone.utc)
+        ingestion_timestamp = datetime.now(UTC)
 
         normalized_stations = []
         for station in network_details.stations:
@@ -92,7 +96,7 @@ class CityBikesExtractor:
                     extra=extra_dict,
                 )
                 normalized_stations.append(normalized)
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError, ValidationError) as e:
                 logger.error(
                     f"Failed to normalize station {station.id} in {network_id}: {e}"
                 )
@@ -114,7 +118,7 @@ class CityBikesExtractor:
             return timestamp[:-1]
         return timestamp
 
-    def extract_all_stations(self) -> List[NormalizedStation]:
+    def extract_all_stations(self) -> list[NormalizedStation]:
         """
         Extract stations from all target German cities.
 
@@ -130,7 +134,7 @@ class CityBikesExtractor:
                 stations = self.extract_network_stations(network_id)
                 all_stations.extend(stations)
                 successful += 1
-            except Exception as e:
+            except (RequestException, AttributeError, TypeError, ValueError, ValidationError) as e:
                 logger.error(f"Failed to extract stations for {network_id}: {e}")
                 failed += 1
                 # Continue with other networks

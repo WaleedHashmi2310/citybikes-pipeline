@@ -5,7 +5,7 @@ Uses the existing LocalStorage implementation.
 """
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add project root to path to import modules
@@ -15,9 +15,10 @@ sys.path.insert(0, str(project_root))
 from ingestion.schemas import NormalizedStation
 from storage.local import LocalStorage
 
+
 def generate_sample_stations():
     """Generate sample station data."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     stations = [
         NormalizedStation(
@@ -67,7 +68,7 @@ def main():
         path = storage.store_stations(stations)
         print(f"Sample data written to: {path}")
         print(f"Partition directory: {Path(path).parent}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Failed to store sample data: {e}")
         sys.exit(1)
 

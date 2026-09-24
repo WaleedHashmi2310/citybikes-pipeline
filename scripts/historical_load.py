@@ -31,12 +31,11 @@ Parameters:
 
 import argparse
 import logging
+import math
 import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List, Dict
-import math
 
 # Add project root to path to import modules
 project_root = Path(__file__).parent.parent
@@ -45,9 +44,9 @@ sys.path.insert(0, str(project_root))
 from ingestion.client import CityBikesClient
 from ingestion.extractor import CityBikesExtractor
 from ingestion.schemas import NormalizedStation
-from storage.local import LocalStorage
 from storage.gcs import GCSStorage
 from storage.interface import StorageInterface
+from storage.local import LocalStorage
 
 # Default network IDs (German cities from extractor - high volume networks)
 DEFAULT_NETWORKS = [
@@ -161,7 +160,7 @@ def get_time_pattern_adjustment(dt: datetime, city: str) -> float:
     return final_adjustment
 
 def generate_historical_records(
-    base_stations: List[NormalizedStation],
+    base_stations: list[NormalizedStation],
     start_dt: datetime,
     end_dt: datetime,
     interval_minutes: int,
@@ -186,7 +185,7 @@ def generate_historical_records(
     current_dt = start_dt
 
     # Group stations by city for efficiency
-    stations_by_city: Dict[str, List[NormalizedStation]] = {}
+    stations_by_city: dict[str, list[NormalizedStation]] = {}
     for station in base_stations:
         city = station.city
         if city not in stations_by_city:

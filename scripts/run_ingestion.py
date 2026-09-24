@@ -30,9 +30,9 @@ sys.path.insert(0, str(project_root))
 from ingestion.client import CityBikesClient
 from ingestion.extractor import CityBikesExtractor
 from ingestion.loader import DataLoader
-from storage.local import LocalStorage
 from storage.gcs import GCSStorage
 from storage.interface import StorageInterface  # noqa: F401
+from storage.local import LocalStorage
 
 # Default network IDs (German cities from extractor - high volume networks)
 DEFAULT_NETWORKS = [

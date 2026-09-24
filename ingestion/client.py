@@ -1,16 +1,17 @@
 """CityBikes API client with retry logic."""
 
 import logging
-from typing import Optional
+
 import requests
 from tenacity import (
+    before_sleep_log,
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    before_sleep_log,
 )
-from ingestion.schemas import NetworkListResponse, NetworkDetails
+
+from ingestion.schemas import NetworkDetails, NetworkListResponse
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class CityBikesClient:
 
     BASE_URL = "https://api.citybik.es/v2"
 
-    def __init__(self, base_url: Optional[str] = None):
+    def __init__(self, base_url: str | None = None):
         """
         Initialize client.
 
@@ -122,6 +123,6 @@ class CityBikesClient:
         try:
             self._make_request("/networks")
             return True
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Connection test failed: {e}")
             return False

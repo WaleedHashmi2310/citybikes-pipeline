@@ -16,6 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def get_terraform_output(output_name):
     """Get a Terraform output value."""
     try:

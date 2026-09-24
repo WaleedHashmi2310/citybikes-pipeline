@@ -1,8 +1,9 @@
 """Pydantic schemas for CityBikes API data."""
 
 from datetime import datetime
-from typing import Optional, List, Union, Dict, Any
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Location(BaseModel):
@@ -20,31 +21,31 @@ class NetworkSummary(BaseModel):
     id: str
     name: str
     href: str
-    company: Union[str, List[str]]
+    company: str | list[str]
     location: Location
-    gbfs_href: Optional[str] = None
-    ebikes: Optional[bool] = None
+    gbfs_href: str | None = None
+    ebikes: bool | None = None
 
 
 class NetworkListResponse(BaseModel):
     """Response from /v2/networks endpoint."""
 
-    networks: List[NetworkSummary]
+    networks: list[NetworkSummary]
 
 
 class StationExtra(BaseModel):
     """Extra fields for station."""
 
-    uid: Optional[str] = None
-    renting: Optional[Union[int, str]] = None
-    returning: Optional[Union[int, str]] = None
-    last_updated: Optional[Union[int, str]] = None
-    has_ebikes: Optional[bool] = None
-    ebikes: Optional[Union[int, str]] = None
-    payment: Optional[List[str]] = None
-    payment_terminal: Optional[bool] = Field(None, alias="payment-terminal")
-    slots: Optional[Union[int, str]] = None
-    rental_uris: Optional[dict] = None
+    uid: str | None = None
+    renting: (int | str) | None = None
+    returning: (int | str) | None = None
+    last_updated: (int | str) | None = None
+    has_ebikes: bool | None = None
+    ebikes: (int | str) | None = None
+    payment: list[str] | None = None
+    payment_terminal: bool | None = Field(None, alias="payment-terminal")
+    slots: (int | str) | None = None
+    rental_uris: dict | None = None
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -58,8 +59,8 @@ class Station(BaseModel):
     longitude: float
     timestamp: str  # UTC timestamp string
     free_bikes: int
-    empty_slots: Optional[int] = 0
-    extra: Optional[StationExtra] = None
+    empty_slots: int | None = 0
+    extra: StationExtra | None = None
 
     @field_validator('empty_slots', mode='before')
     @classmethod
@@ -77,8 +78,8 @@ class Vehicle(BaseModel):
     latitude: float
     longitude: float
     timestamp: str
-    extra: Optional[dict] = None
-    kind: Optional[str] = None  # "bike", "ebike", "scooter"
+    extra: dict | None = None
+    kind: str | None = None  # "bike", "ebike", "scooter"
 
 
 class NetworkDetails(BaseModel):
@@ -87,12 +88,12 @@ class NetworkDetails(BaseModel):
     id: str
     name: str
     href: str
-    company: Union[str, List[str]]
+    company: str | list[str]
     location: Location
-    gbfs_href: Optional[str] = None
-    ebikes: Optional[bool] = None
-    stations: List[Station]
-    vehicles: Optional[List[Vehicle]] = None
+    gbfs_href: str | None = None
+    ebikes: bool | None = None
+    stations: list[Station]
+    vehicles: list[Vehicle] | None = None
 
 
 class NormalizedStation(BaseModel):
@@ -104,10 +105,10 @@ class NormalizedStation(BaseModel):
     longitude: float
     free_bikes: int
     empty_slots: int
-    slots: Optional[int] = None  # Total capacity from extra.slots, or free_bikes + empty_slots
+    slots: int | None = None  # Total capacity from extra.slots, or free_bikes + empty_slots
     timestamp: str  # Original station timestamp from API
     ingestion_timestamp: datetime  # When we ingested the data
     city: str  # City name from network location
-    extra: Optional[Dict[str, Any]] = None  # Raw extra field as JSON
+    extra: dict[str, Any] | None = None  # Raw extra field as JSON
 
     model_config = ConfigDict(populate_by_name=True, extra="ignore")

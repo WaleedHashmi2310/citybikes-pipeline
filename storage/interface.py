@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List
+
 from ingestion.schemas import NormalizedStation
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class StorageInterface(ABC):
     """
 
     @abstractmethod
-    def store_stations(self, stations: List[NormalizedStation]) -> str:
+    def store_stations(self, stations: list[NormalizedStation]) -> str:
         """Store normalized stations to storage backend.
 
         Args:

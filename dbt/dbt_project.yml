@@ -27,9 +27,6 @@ snapshot-paths:
   - snapshots
 
 # directory for compiled files
-target-path: target
-
-# directories to be removed by `dbt clean`
 clean-targets:
   - target
   - dbt_packages
@@ -51,3 +48,5 @@ models:
 
 # Require dbt version
 require-dbt-version: ">=1.7.0"
+flags:
+  require_generic_test_arguments_property: true
